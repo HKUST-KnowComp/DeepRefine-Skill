@@ -2,6 +2,9 @@
 
 # DeepRefine-Skill
 
+<p align="center">
+    <img src="./assets/icons.png" width="20%" style="max-width: 80;">
+</p>
 
 [![PyPi](https://img.shields.io/badge/PyPi-v0.1.7-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.7/)
 [![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.7/)
