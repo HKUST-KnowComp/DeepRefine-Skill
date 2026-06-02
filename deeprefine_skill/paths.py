@@ -76,17 +76,23 @@ def setup_import_paths(deeprefine_repo: Path) -> None:
 
 
 def env_defaults() -> dict[str, str]:
+    shared_api_key = os.environ.get(
+        "DEEPREFINE_API_KEY", os.environ.get("OPENAI_API_KEY", "")
+    )
     return {
-        "DEEPREFINE_LLM_URL": os.environ.get(
-            "DEEPREFINE_LLM_URL", "http://127.0.0.1:8134/v1"
-        ),
-        "DEEPREFINE_EMBED_URL": os.environ.get(
-            "DEEPREFINE_EMBED_URL", "http://127.0.0.1:8128/v1"
-        ),
+        # Empty URL means: use provider default endpoint in OpenAI SDK.
+        "DEEPREFINE_LLM_URL": os.environ.get("DEEPREFINE_LLM_URL", "").strip(),
+        "DEEPREFINE_EMBED_URL": os.environ.get("DEEPREFINE_EMBED_URL", "").strip(),
+        "DEEPREFINE_LLM_API_KEY": os.environ.get(
+            "DEEPREFINE_LLM_API_KEY", shared_api_key
+        ).strip(),
+        "DEEPREFINE_EMBED_API_KEY": os.environ.get(
+            "DEEPREFINE_EMBED_API_KEY", shared_api_key
+        ).strip(),
         "DEEPREFINE_MODEL": os.environ.get(
-            "DEEPREFINE_MODEL", "HaoyuHuang2/DeepRefine-v1-8B"
+            "DEEPREFINE_MODEL", "gpt-4.1-mini"
         ),
         "DEEPREFINE_EMBED_MODEL": os.environ.get(
-            "DEEPREFINE_EMBED_MODEL", "Qwen/Qwen3-Embedding-0.6B"
+            "DEEPREFINE_EMBED_MODEL", "text-embedding-3-small"
         ),
     }

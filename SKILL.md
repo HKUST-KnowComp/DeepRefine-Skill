@@ -32,7 +32,9 @@ cd /path/to/your-kb-project
 deeprefine cursor install
 ```
 
-Start vLLM from DeepRefine: embedding `8128`, refine model `8134` (see DeepRefine `scripts/vllm_serve/`).
+Inference defaults to your current API model setup (`OPENAI_API_KEY` or `DEEPREFINE_API_KEY`).
+
+Optional: local vLLM from DeepRefine (embedding `8128`, refine model `8134`; see `scripts/vllm_serve/`).
 
 ## `/deeprefine`
 

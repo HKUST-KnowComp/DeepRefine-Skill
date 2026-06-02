@@ -3,8 +3,8 @@
 # DeepRefine-Skill
 
 
-[![PyPi](https://img.shields.io/badge/PyPi-v0.1.3-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.3/)
-[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.3/)
+[![PyPi](https://img.shields.io/badge/PyPi-v0.1.4-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.4/)
+[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.4/)
 [![Paper](https://img.shields.io/badge/Paper-DeepRefine-b31b1b.svg)](https://arxiv.org/pdf/2605.10488)
 [![Project](https://img.shields.io/badge/Project-DeepRefine-green.svg)](https://github.com/HKUST-KnowComp/DeepRefine)
 
@@ -36,15 +36,13 @@ graphify-out/
 ```
 
 > **Standalone repo.** Model code (`autorefiner`, `atlas_rag`) lives in a separate [DeepRefine](https://github.com/HKUST-KnowComp/DeepRefine) checkout.  
-> `pip install deeprefine-cli` ships the CLI and `SKILL.md`. `deeprefine refine` still needs DeepRefine + `atlastune` + inference (today: local vLLM).
+> `pip install deeprefine-cli` ships the CLI and `SKILL.md`. `deeprefine refine` still needs DeepRefine + `atlastune`, with default inference from your current API model setup; you can override with custom base URL and API key.
 
 ---
 
-## Roadmap
+## News
 
-**Inference today:** local vLLM only (see [Inference](#4-inference-vllm) below).
-
-**Coming soon:** third-party API support (OpenAI-compatible hosted LLM + embeddings) — no local GPU required.
+- [2026/6/2] deeprefine-cli v0.1.4 has been released! Customize your LLM api.
 
 ---
 
@@ -55,7 +53,7 @@ graphify-out/
 | 1 | Install [DeepRefine](https://github.com/HKUST-KnowComp/DeepRefine) in `atlastune` |
 | 2 | `pip install deeprefine-cli` |
 | 3 | `deeprefine cursor install` in your KB project |
-| 4 | Start vLLM (embedding + refine) |
+| 4 | (Optional) start local vLLM, or use your API provider |
 | 5 | `deeprefine history add` → `deeprefine refine` |
 
 ```bash
@@ -70,9 +68,20 @@ pip install deeprefine-cli
 cd /path/to/your-kb-project
 deeprefine cursor install
 
-# 4) vLLM (each session, from DeepRefine repo)
+# 4) Optional local vLLM (each session, from DeepRefine repo)
 bash /path/to/DeepRefine/scripts/vllm_serve/qwen3-0.6b-emb.sh
 bash /path/to/DeepRefine/scripts/vllm_serve/qwen3-8b-vllm-reafiner.sh
+
+# OR use your API provider (no local vLLM)
+export DEEPREFINE_LLM_URL=your-llm-endpoint
+export DEEPREFINE_EMBED_URL=your-embed-endpoint
+export DEEPREFINE_LLM_API_KEY=your_llm_api_key
+export DEEPREFINE_EMBED_API_KEY=your_embed_api_key
+export DEEPREFINE_MODEL=your_llm_model
+export DEEPREFINE_EMBED_MODEL=your_embed_model
+# optional (if your provider uses one key for both):
+# export DEEPREFINE_API_KEY=your_shared_api_key
+# optional model overrides:
 
 # 5) Refine
 deeprefine history add --query "your question"
@@ -167,9 +176,11 @@ Only if `DeepRefine` is not `../DeepRefine` and not found by walking up from cwd
 export DEEPREFINE_REPO=/path/to/DeepRefine
 ```
 
-### 4. Inference (vLLM)
+### 4. Inference
 
-From the **DeepRefine** repo:
+Default: use your API provider from environment.
+
+Optional local vLLM (from the **DeepRefine** repo):
 
 ```bash
 conda activate atlastune
@@ -179,10 +190,13 @@ bash /path/to/DeepRefine/scripts/vllm_serve/qwen3-8b-vllm-reafiner.sh
 
 | Variable | Default |
 |----------|---------|
-| `DEEPREFINE_LLM_URL` | `http://127.0.0.1:8134/v1` |
-| `DEEPREFINE_EMBED_URL` | `http://127.0.0.1:8128/v1` |
-| `DEEPREFINE_MODEL` | `HaoyuHuang2/DeepRefine-v1-8B` |
-| `DEEPREFINE_EMBED_MODEL` | `Qwen/Qwen3-Embedding-0.6B` |
+| `DEEPREFINE_LLM_URL` | *(empty; SDK default endpoint)* |
+| `DEEPREFINE_EMBED_URL` | *(empty; SDK default endpoint)* |
+| `DEEPREFINE_API_KEY` | fallback to `OPENAI_API_KEY` |
+| `DEEPREFINE_LLM_API_KEY` | fallback to `DEEPREFINE_API_KEY` |
+| `DEEPREFINE_EMBED_API_KEY` | fallback to `DEEPREFINE_API_KEY` |
+| `DEEPREFINE_MODEL` | `gpt-4.1-mini` |
+| `DEEPREFINE_EMBED_MODEL` | `text-embedding-3-small` |
 
 ### 5. Cursor skill
 

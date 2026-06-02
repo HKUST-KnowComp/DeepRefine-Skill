@@ -60,9 +60,27 @@ def refinement_to_jsonable(
     return base
 
 
+def _build_openai_client(*, base_url: str, api_key: str) -> OpenAI:
+    kwargs: dict[str, str] = {}
+    if base_url:
+        kwargs["base_url"] = base_url
+    # For local compatible servers (e.g. vLLM) api_key can be empty.
+    if api_key:
+        kwargs["api_key"] = api_key
+    elif base_url:
+        kwargs["api_key"] = "EMPTY"
+    return OpenAI(**kwargs)
+
+
 def make_clients(cfg: dict[str, str]) -> tuple[LLMGenerator, Qwen3Emb]:
-    llm_client = OpenAI(base_url=cfg["DEEPREFINE_LLM_URL"], api_key="EMPTY")
-    embed_client = OpenAI(base_url=cfg["DEEPREFINE_EMBED_URL"], api_key="EMPTY")
+    llm_client = _build_openai_client(
+        base_url=cfg["DEEPREFINE_LLM_URL"],
+        api_key=cfg["DEEPREFINE_LLM_API_KEY"],
+    )
+    embed_client = _build_openai_client(
+        base_url=cfg["DEEPREFINE_EMBED_URL"],
+        api_key=cfg["DEEPREFINE_EMBED_API_KEY"],
+    )
     llm = LLMGenerator(
         client=llm_client,
         model_name=cfg["DEEPREFINE_MODEL"],
