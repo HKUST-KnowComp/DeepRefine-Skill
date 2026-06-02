@@ -3,8 +3,8 @@
 # DeepRefine-Skill
 
 
-[![PyPi](https://img.shields.io/badge/PyPi-v0.1.6-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.6/)
-[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.6/)
+[![PyPi](https://img.shields.io/badge/PyPi-v0.1.7-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.7/)
+[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.7/)
 [![Paper](https://img.shields.io/badge/Paper-DeepRefine-b31b1b.svg)](https://arxiv.org/pdf/2605.10488)
 [![Project](https://img.shields.io/badge/Project-DeepRefine-green.svg)](https://github.com/HKUST-KnowComp/DeepRefine)
 
@@ -38,7 +38,7 @@ graphify-out/
 
 ## News
 
-- [2026/6/2] deeprefine-cli v0.1.6 has been released! Customize your LLM api in CLI.
+- [2026/6/2] deeprefine-cli v0.1.7 — agent Reafiner loop + `deeprefine loop` / `apply --trace-file`.
 
 ---
 
