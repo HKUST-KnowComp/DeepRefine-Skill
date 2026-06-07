@@ -11,7 +11,7 @@
 [![Paper](https://img.shields.io/badge/Paper-DeepRefine-b31b1b.svg)](https://arxiv.org/pdf/2605.10488)
 [![Project](https://img.shields.io/badge/Project-DeepRefine-green.svg)](https://github.com/HKUST-KnowComp/DeepRefine)
 
-<img src="assets/harness.png" alt="workflow" width="400">
+<img src="assets/harness.png" alt="workflow" width="360">
 
 </div>
 
