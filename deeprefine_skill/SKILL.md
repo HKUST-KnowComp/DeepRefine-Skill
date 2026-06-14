@@ -28,7 +28,7 @@ Do **NOT**:
 4. Skip error abduction when `len(interaction_history) > 1`.
 5. Write `<refinement>` before abduction when refinement is required.
 6. Hand-edit `graph.json` with Python or ad-hoc JSON patches.
-7. Run `deeprefine history add` at the start of `/deeprefine` (only `loop finish` updates history).
+7. Ignore pending history and refine only one latest query when unrefined queries already exist.
 8. Invent a shorter pipeline (“read file → write refinement → apply”).
 
 If validation fails, **fix the trace and re-run the missing step** — do not bypass with `--skip-trace-check`.
@@ -64,65 +64,90 @@ Run `deeprefine loop validate --trace-file ...` after abduction and before `appl
 
 ---
 
+## Query queue selection (default behavior of `/deeprefine`)
+
+`/deeprefine` must process **all unrefined history queries** first, not just the latest one.
+
+1. Sync graphify query memory into DeepRefine history:
+   - run: `deeprefine history sync-memory`
+   - source dir: `graphify-out/memory/query_*.md`
+   - target file: `graphify-out/.deeprefine/history.jsonl`
+2. Read pending queue from `graphify-out/.deeprefine/history.jsonl`:
+   - include rows where `refined != true`
+   - dedupe by `id` (first occurrence)
+   - preserve file order
+3. If pending queue is non-empty: set `target_queries = pending_queue`.
+4. If pending queue is empty: set `target_queries = [current session question]`.
+5. Run the full Reafiner loop for **each** query in `target_queries`, one by one.
+6. Finish one query (`loop finish`) before starting the next query.
+
+---
+
 ## Control flow (must match `Reafiner.refine()`)
 
 Pseudocode — follow **exactly**:
 
 ```text
-interaction_history = []
-for step in 1..MAX_HOPS:
-    print "[Step: {step}]"   # show in chat
+target_queries = pending_history_queries()  # refined != true, dedupe by id, keep order
+run "deeprefine history sync-memory" before loading pending history
+if target_queries is empty:
+    target_queries = [current session question]
 
-    if step == 1:
-        # Vector-retrieval equivalent: graphify query on full question
-        RUN: graphify query "<question>"
-        triples = parse NODE/EDGE → [{subject, relation, object}, ...]
-        cap = MAX_TRIPLE_NUM_BY_STEP[0]  # 5
-        record retrieval.method = "graphify_query"
+for question in target_queries:
+    interaction_history = []
+    for step in 1..MAX_HOPS:
+        print "[Step: {step}]"   # show in chat
+
+        if step == 1:
+            # Vector-retrieval equivalent: graphify query on full question
+            RUN: graphify query "<question>"
+            triples = parse NODE/EDGE → [{subject, relation, object}, ...]
+            cap = MAX_TRIPLE_NUM_BY_STEP[0]  # 5
+            record retrieval.method = "graphify_query"
+        else:
+            # k-hop expansion from entities in previous hop (NOT a new random search)
+            entities = unique subjects/objects from previous triples
+            expand 1-hop neighbors from graphify-out/graph.json (or graphify query on entities)
+            cap = MAX_TRIPLE_NUM_BY_STEP[step-1]
+            record retrieval.method = "k_hop_expansion" or "graphify_query+k_hop_expansion"
+
+        triples = dedupe; len(triples) <= cap
+
+        # Answerable judgement — session LLM, prompts below
+        answerable, judgement_raw = LLM_judge(question, triples)
+        MUST output ONLY: <judge>Yes</judge> or <judge>No</judge>
+
+        append interaction_history with:
+          step, query, num_hops=(step-1)*INCREMENT_HOP, base_top_k=10,
+          retrieved_subgraph, answerable, judgement_raw,
+          retrieval: {method, evidence: "<command output excerpt>"}
+
+        if answerable:
+            BREAK   # stop hop loop
+
+    # --- same branch as Reafiner.refine() line 314+ ---
+    if len(interaction_history) <= 1:
+        # Early exit: first hop was answerable — NO graph refinement
+        set trace.early_exit = true
+        deeprefine loop finish --trace-file ...   # no --refinement-file
+        CONTINUE  # move to next pending query
     else:
-        # k-hop expansion from entities in previous hop (NOT a new random search)
-        entities = unique subjects/objects from previous triples
-        expand 1-hop neighbors from graphify-out/graph.json (or graphify query on entities)
-        cap = MAX_TRIPLE_NUM_BY_STEP[step-1]
-        record retrieval.method = "k_hop_expansion" or "graphify_query+k_hop_expansion"
+        # len > 1 → ALWAYS error abduction + actions (even if last hop was Yes)
+        error_abduction = LLM_abduction(interaction_history[-HISTORY_HORIZON:])
+        MUST output: <abduction>...</abduction>
 
-    triples = dedupe; len(triples) <= cap
+        actions = LLM_kg_refinement(
+            last_hop.retrieved_subgraph,
+            error_abduction,
+            question,
+            source file hints from triples,
+        )
+        MUST output: <refinement>insert_edge(...)|...</refinement>
 
-    # Answerable judgement — session LLM, prompts below
-    answerable, judgement_raw = LLM_judge(question, triples)
-    MUST output ONLY: <judge>Yes</judge> or <judge>No</judge>
-
-    append interaction_history with:
-      step, query, num_hops=(step-1)*INCREMENT_HOP, base_top_k=10,
-      retrieved_subgraph, answerable, judgement_raw,
-      retrieval: {method, evidence: "<command output excerpt>"}
-
-    if answerable:
-        BREAK   # stop hop loop
-
-# --- same branch as Reafiner.refine() line 314+ ---
-if len(interaction_history) <= 1:
-    # Early exit: first hop was answerable — NO graph refinement
-    set trace.early_exit = true
-    deeprefine loop finish --trace-file ...   # no --refinement-file
-    STOP
-else:
-    # len > 1 → ALWAYS error abduction + actions (even if last hop was Yes)
-    error_abduction = LLM_abduction(interaction_history[-HISTORY_HORIZON:])
-    MUST output: <abduction>...</abduction>
-
-    actions = LLM_kg_refinement(
-        last_hop.retrieved_subgraph,
-        error_abduction,
-        question,
-        source file hints from triples,
-    )
-    MUST output: <refinement>insert_edge(...)|...</refinement>
-
-    save refinement to graphify-out/.deeprefine/refinement_actions_<id>.txt
-    deeprefine loop validate --trace-file ... --refinement-file ...
-    deeprefine apply --trace-file ... --refinement-file ...
-    deeprefine loop finish --trace-file ... --refinement-file ...
+        save refinement to graphify-out/.deeprefine/refinement_actions_<id>.txt
+        deeprefine loop validate --trace-file ... --refinement-file ...
+        deeprefine apply --trace-file ... --refinement-file ...
+        deeprefine loop finish --trace-file ... --refinement-file ...
 ```
 
 **Critical Reafiner rule:** refinement runs when `len(interaction_history) > 1`, not only when all judgements are `No`.
@@ -238,18 +263,30 @@ Copy and tick each item in your final message:
 # 0. KB project root; graphify-out/graph.json exists
 mkdir -p graphify-out/.deeprefine
 cp graphify-out/graph.json graphify-out/.deeprefine/graph.json.bak
+
+# 1. Sync graphify query memory to deeprefine history first.
+deeprefine history sync-memory
+
+# 2. Build target query list:
+#    - preferred: all pending from history.jsonl (refined != true)
+#    - fallback: current session question (single query)
+deeprefine history list --pending
+
+# 3. For EACH query in target list:
 deeprefine loop init --query "<question>"
 
-# 1–4. For each hop: graphify/graph read → judge → append to loop_trace_*.json
+# 4–7. For each hop: graphify/graph read → judge → append to loop_trace_*.json
 
-# 5a. Early exit (len(history)==1 and answerable)
+# 8a. Early exit (len(history)==1 and answerable)
 deeprefine loop validate --trace-file graphify-out/.deeprefine/loop_trace_<id>.json
 deeprefine loop finish --trace-file graphify-out/.deeprefine/loop_trace_<id>.json
 
-# 5b. Refinement path (len(history)>1)
+# 8b. Refinement path (len(history)>1)
 deeprefine loop validate --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 deeprefine apply --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 deeprefine loop finish --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+
+# 9. Repeat step 3..8 until all pending queries are finished.
 ```
 
 ---

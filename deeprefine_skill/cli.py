@@ -5,7 +5,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from deeprefine_skill.history import append_history, iter_history, pending_queries
+from deeprefine_skill.history import (
+    append_history,
+    ensure_history_entry,
+    iter_history,
+    pending_queries,
+    sync_history_from_memory,
+)
 from deeprefine_skill.installers import install_cursor_skill, uninstall_cursor_skill
 from deeprefine_skill.paths import (
     env_defaults,
@@ -57,6 +63,11 @@ def cmd_history_add(args: argparse.Namespace) -> int:
 def cmd_history_list(args: argparse.Namespace) -> int:
     project = find_project_root()
     paths = graphify_paths(project)
+    if getattr(args, "sync_memory", False):
+        memory_dir = paths["graphify_out"] / "memory"
+        result = sync_history_from_memory(paths["history"], memory_dir)
+        if result["added"] > 0:
+            print(f"Synced {result['added']} query(s) from {memory_dir}")
     rows = (
         pending_queries(paths["history"])
         if args.pending
@@ -68,6 +79,18 @@ def cmd_history_list(args: argparse.Namespace) -> int:
     for row in rows:
         flag = "refined" if row.get("refined") else "pending"
         print(f"[{flag}] {row.get('id', '?')}: {row.get('query', '')}")
+    return 0
+
+
+def cmd_history_sync_memory(args: argparse.Namespace) -> int:
+    project = find_project_root()
+    paths = graphify_paths(project)
+    memory_dir = paths["graphify_out"] / "memory"
+    result = sync_history_from_memory(paths["history"], memory_dir)
+    print(f"Memory dir: {memory_dir}")
+    print(f"History: {paths['history']}")
+    print(f"Added: {result['added']}")
+    print(f"Known query ids: {result['known']}")
     return 0
 
 
@@ -197,6 +220,14 @@ def cmd_loop_finish(args: argparse.Namespace) -> int:
 
     q = trace.get("query", "").strip()
     qid = trace.get("query_id") or query_id(q)
+    ensure_history_entry(
+        paths["history"],
+        q,
+        source="deeprefine_loop",
+        entry_id=qid,
+        refined=False,
+        extra={"trace_file": str(trace_path)},
+    )
     log = paths["history"].parent / f"refinement_results_{time.strftime('%Y%m%d')}.jsonl"
     entry = {
         "query": q,
@@ -222,6 +253,8 @@ def cmd_refine(args: argparse.Namespace) -> int:
 
     project = find_project_root(Path(args.project_root) if args.project_root else None)
     paths = graphify_paths(project)
+    if not args.query:
+        sync_history_from_memory(paths["history"], paths["graphify_out"] / "memory")
     cfg = env_defaults()
     result = refine_from_history(
         paths,
@@ -295,7 +328,17 @@ def main(argv: list[str] | None = None) -> int:
     p_add.set_defaults(func=cmd_history_add)
     p_list = hsub.add_parser("list", help="List history entries")
     p_list.add_argument("--pending", action="store_true")
+    p_list.add_argument(
+        "--sync-memory",
+        action="store_true",
+        help="Import query_*.md under graphify-out/memory before listing",
+    )
     p_list.set_defaults(func=cmd_history_list)
+    p_sync = hsub.add_parser(
+        "sync-memory",
+        help="Import graphify-out/memory/query_*.md into deeprefine history",
+    )
+    p_sync.set_defaults(func=cmd_history_sync_memory)
 
     p_index = sub.add_parser("index", help="Rebuild FAISS cache from graph.json")
     p_index.add_argument("--rebuild", action="store_true", default=True)
