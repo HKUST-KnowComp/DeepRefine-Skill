@@ -5,8 +5,8 @@ description: >-
   Use when the user asks to refine their KG, improve retrieval quality, fix
   incomplete or incorrect knowledge graph triples, or explicitly invokes
   /deeprefine.  Implements the same control flow as Reafiner.refine() with
-  graphify search instead of FAISS, session LLM for judgement, and deeprefine
-  apply for graph writes.
+  graphify search instead of FAISS, session LLM for judgement, and dry-run
+  review before approved graph writes.
 allowed-tools: shell
 license: MIT
 ---
@@ -19,14 +19,39 @@ license: MIT
 > this skill's directory are auto-discovered by Copilot and available for
 > invocation.
 
+## Default Safety Policy: Dry-Run Only
+
+A normal `/deeprefine` invocation **MUST NEVER** call `deeprefine apply`.
+
+The default `/deeprefine` workflow must stop after:
+
+1. `deeprefine loop validate`
+2. `deeprefine review`
+3. showing the proposed actions and HIGH/MEDIUM/LOW review report to the user
+
+Then ask the user for explicit approval.
+
+Only if the user's **next message** explicitly says to approve/apply/write the
+graph may you run:
+
+```bash
+deeprefine apply --trace-file ... --refinement-file ...
+deeprefine loop finish --trace-file ... --refinement-file ...
+```
+
+Do not treat generation of `<refinement>` actions as approval.  Do not treat a
+valid trace as approval.  Do not apply in the same `/deeprefine` turn.
+
+---
+
 You **MUST** implement the **same control flow** as `Reafiner.refine()` in
 DeepRefine (`autorefiner/src/reafiner.py`).
 
-| Component   | Agent mode                                              | CLI `deeprefine refine` |
-|-------------|---------------------------------------------------------|-------------------------|
-| Retrieval   | `graphify query` + k-hop from `graph.json`              | FAISS retriever         |
-| LLM         | **Your session model**                                  | External API / vLLM     |
-| Graph writes| `deeprefine apply` + validated `loop_trace_*.json`      | In-process              |
+| Component    | Agent mode                                                    | CLI `deeprefine refine`      |
+|--------------|---------------------------------------------------------------|------------------------------|
+| Retrieval    | `graphify query` + k-hop from `graph.json`                    | FAISS retriever              |
+| LLM          | **Your session model**                                        | External API / vLLM          |
+| Graph writes | Dry-run proposal + `deeprefine review`; `deeprefine apply` only after user approval | Dry-run by default; `--apply` persists |
 
 ---
 
@@ -37,13 +62,17 @@ Do **NOT**:
 1. Run `deeprefine refine` (unless the user explicitly asks for CLI/FAISS mode).
 2. Call `deeprefine apply` without a valid `loop_trace_<query_id>.json` (CLI
    will reject).
-3. Skip any hop's `<judge>Yes</judge>` / `<judge>No</judge>` judgement.
-4. Skip error abduction when `len(interaction_history) > 1`.
-5. Write `<refinement>` before abduction when refinement is required.
-6. Hand-edit `graph.json` with Python or ad-hoc JSON patches.
-7. Ignore pending history and refine only one latest query when unrefined
+3. Call `deeprefine apply` before running `deeprefine review` and receiving
+   explicit user approval.
+4. Ignore LOW-confidence review warnings unless the user explicitly requests
+   `--allow-low-confidence`.
+5. Skip any hop's `<judge>Yes</judge>` / `<judge>No</judge>` judgement.
+6. Skip error abduction when `len(interaction_history) > 1`.
+7. Write `<refinement>` before abduction when refinement is required.
+8. Hand-edit `graph.json` with Python or ad-hoc JSON patches.
+9. Ignore pending history and refine only one latest query when unrefined
    queries already exist.
-8. Invent a shorter pipeline ("read file → write refinement → apply").
+10. Invent a shorter pipeline ("read file → write refinement → apply").
 
 If validation fails, **fix the trace and re-run the missing step** — do not
 bypass with `--skip-trace-check`.
@@ -76,7 +105,7 @@ deeprefine loop init --query "<exact question>"
 
 Append each hop to `interaction_history` **before** starting the next hop.
 Run `deeprefine loop validate --trace-file ...` after abduction and before
-`apply`.
+`review` / approved `apply`.
 
 ---
 
@@ -97,7 +126,9 @@ the latest one.
 4. If pending queue is empty: set `target_queries = [current session question]`.
 5. Run the full Reafiner loop for **each** query in `target_queries`, one by
    one.
-6. Finish one query (`loop finish`) before starting the next query.
+6. For early-exit queries, finish immediately.  For refinement-path queries,
+   generate review output and wait for user approval before `apply` +
+   `loop finish`.
 
 ---
 
@@ -164,12 +195,52 @@ for question in target_queries:
 
         save refinement to graphify-out/.deeprefine/refinement_actions_<id>.txt
         deeprefine loop validate --trace-file ... --refinement-file ...
-        deeprefine apply --trace-file ... --refinement-file ...
-        deeprefine loop finish --trace-file ... --refinement-file ...
+        deeprefine review --trace-file ... --refinement-file ...
+        SHOW review labels: HIGH / MEDIUM / LOW, evidence, warnings, suggested replacements
+        HARD STOP: do not modify graph.json in this /deeprefine turn
+        Report the proposed actions and HIGH/MEDIUM/LOW review to the user
+        Ask for explicit approval; approval must arrive in the user's next message
+
+        # Follow-up turn only, after the user's next message explicitly approves/apply/write:
+        if user explicitly approves and no LOW-confidence action remains:
+            deeprefine apply --trace-file ... --refinement-file ...
+            deeprefine loop finish --trace-file ... --refinement-file ...
+        if user explicitly accepts LOW-confidence risk in that approval message:
+            deeprefine apply --allow-low-confidence --trace-file ... --refinement-file ...
+            deeprefine loop finish --trace-file ... --refinement-file ...
 ```
 
 **Critical Reafiner rule:** refinement runs when `len(interaction_history) > 1`,
 not only when all judgements are `No`.
+
+**Safe-review rule:** a refinement path is dry-run by default.  Generating
+`<refinement>` actions is not approval to write `graph.json`, and a normal
+`/deeprefine` turn must end after `deeprefine review`.
+
+---
+
+## Evidence-Aware Review Rules
+
+Before any graph write, run:
+
+```bash
+deeprefine review --trace-file graphify-out/.deeprefine/loop_trace_<id>.json --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+```
+
+The review must label every action:
+
+- `HIGH`: direct graph or code evidence exists.
+- `MEDIUM`: k-hop context supports the action, but direct code or exact-edge
+  evidence is missing.
+- `LOW`: endpoint nodes are ambiguous, too broad, cross-community, or cannot be
+  grounded in `graph.json`.
+
+Bare names such as `main()`, `run()`, `train()`, `test()`, and `setup()` are
+ambiguous even if they match only one node.  Prefer file-qualified labels such
+as `trainer_Brain_CLS.py::train_epoch()`.
+
+`deeprefine apply` refuses LOW-confidence actions by default.  Use
+`--allow-low-confidence` only when the user explicitly approves the risk.
 
 ---
 
@@ -271,7 +342,9 @@ Copy and tick each item in your final message:
 [ ] Hops stopped on Yes OR reached MAX_HOPS
 [ ] early_exit OR (abduction + refinement) per Reafiner branch
 [ ] deeprefine loop validate passed
-[ ] deeprefine apply (only if refinement path)
+[ ] deeprefine review generated with HIGH/MEDIUM/LOW labels
+[ ] graph.json intentionally left unchanged pending next-message approval OR user approved in a follow-up message
+[ ] deeprefine apply skipped in normal /deeprefine turn; only run after next-message approval
 [ ] deeprefine loop finish
 ```
 
@@ -301,12 +374,22 @@ deeprefine loop init --query "<question>"
 deeprefine loop validate --trace-file graphify-out/.deeprefine/loop_trace_<id>.json
 deeprefine loop finish --trace-file graphify-out/.deeprefine/loop_trace_<id>.json
 
-# 8b. Refinement path (len(history)>1)
+# 8b. Refinement path (len(history)>1): dry-run review first
 deeprefine loop validate --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+deeprefine review --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+
+# HARD STOP.
+# A normal /deeprefine run must end here.
+# Report the review to the user and ask for explicit approval.
+# Do NOT run deeprefine apply in the same /deeprefine turn.
+
+# Approval-only follow-up commands, only after the user explicitly says approve/apply:
 deeprefine apply --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+# Optional explicit risk override:
+# deeprefine apply --allow-low-confidence --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 deeprefine loop finish --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 
-# 9. Repeat step 3..8 until all pending queries are finished.
+# 9. Repeat step 3..8 until all pending queries are reviewed/finished.
 ```
 
 ---
@@ -354,7 +437,8 @@ Only when the user **explicitly** requests `deeprefine refine` / full runtime:
 ```bash
 conda activate atlastune
 export DEEPREFINE_EMBED_URL=... DEEPREFINE_LLM_URL=...
-deeprefine refine --query "..."
+deeprefine refine --query "..."       # dry-run proposal only
+# deeprefine refine --query "..." --apply   # only when the user explicitly wants CLI mode to write graph.json
 ```
 
 ---
@@ -365,4 +449,6 @@ deeprefine refine --query "..."
 - `graphify-out/.deeprefine/loop_trace_*.json` (**required**)
 - `graphify-out/.deeprefine/refinement_actions_*.txt`
 - `graphify-out/.deeprefine/refinement_results_*.jsonl`
+- `graphify-out/.deeprefine/proposed_refinement_review_*.md`
+- `graphify-out/.deeprefine/proposed_refinement_review_*.json`
 - `graphify-out/.deeprefine/graph.json.bak`
