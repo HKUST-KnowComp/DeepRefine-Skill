@@ -19,6 +19,76 @@ license: MIT
 > this skill's directory are auto-discovered by Copilot and available for
 > invocation.
 
+## Mode Detection (Read First)
+
+Copilot CLI does not natively expose sub-commands like `/deeprefine:review` or
+`/deeprefine:apply`.  Instead, you **MUST** detect the user's intent from their
+message and switch into the correct mode.
+
+### Mode 1: Full workflow (default `/deeprefine`)
+
+**Trigger**: the user invokes `/deeprefine` without qualifiers, or asks to
+refine / improve / fix / diagnose the knowledge graph.
+
+**Behavior**:
+
+1. `deeprefine history sync-memory`
+2. Process all pending queries through the full Reafiner loop
+3. For early-exit queries: `loop finish` immediately
+4. For refinement-path queries: `validate` → `review` → **HARD STOP**
+5. Present the review (HIGH/MEDIUM/LOW labels, evidence, warnings) to the user
+6. **Do NOT call `deeprefine apply`**.  Ask the user for explicit approval.
+
+### Mode 2: Review only
+
+**Trigger**: the user asks to review, inspect, audit, or check evidence for a
+query or set of refinement actions **without writing the graph**.  Keywords:
+"review", "check", "audit", "inspect", "dry-run", "what would change", "show
+me".
+
+**Behavior**:
+
+1. Load the relevant trace and refinement files
+2. Run `deeprefine review --trace-file ... --refinement-file ...`
+3. Present the labelled review report
+4. **Do not modify any files** unless the user explicitly asks to save a review
+   artifact
+5. **Do not call `deeprefine apply`**
+
+### Mode 3: Apply only
+
+**Trigger**: the user **explicitly** approves, applies, or writes a previously
+reviewed refinement.  Keywords in the user's **current message** (not the
+previous one): "approve", "apply", "write", "go ahead", "proceed", "yes
+apply", "looks good, do it".
+
+**Behavior**:
+
+1. Verify that `deeprefine loop validate` and `deeprefine review` were already
+   run (trace and review files must exist)
+2. If no LOW-confidence actions remain:
+   ```bash
+   deeprefine apply --trace-file ... --refinement-file ...
+   ```
+3. If LOW-confidence actions exist and the user **explicitly acknowledged the
+   risk** in the current message:
+   ```bash
+   deeprefine apply --allow-low-confidence --trace-file ... --refinement-file ...
+   ```
+4. If LOW-confidence actions exist but the user did **not** mention the risk:
+   warn the user and ask for explicit risk acknowledgement
+5. After applying: `deeprefine loop finish --trace-file ... --refinement-file ...`
+
+### Hard Mode Switch Rule
+
+- **A previous `/deeprefine` invocation does not count as approval.**
+- **A valid trace does not count as approval.**
+- **A generated `<refinement>` block does not count as approval.**
+- Approval must be an explicit user message in the **current conversation turn**
+  containing one of the Mode 3 trigger keywords.
+
+---
+
 ## Default Safety Policy: Dry-Run Only
 
 A normal `/deeprefine` invocation **MUST NEVER** call `deeprefine apply`.

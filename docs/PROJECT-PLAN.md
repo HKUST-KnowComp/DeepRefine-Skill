@@ -193,7 +193,61 @@ Move from post-hoc regex matching to real-time output gate.
 - [ ] Unit tests: each gate with valid + invalid inputs (~15 cases)
 - [ ] Compare against Level 0 baseline: retry success rate, tokens saved vs full re-run
 
-**Key design decision**: Level 1 only checks *format*, not *semantic correctness*. Semantic validation comes at Level 3.
+**Key design decision**: Level 1 only checks *format*, not *semantic correctness*. Semantic validation comes at Level 1.5.
+
+#### 2.2.5 Harness Level 1.5: Semantic Evidence Audit (exists — `action_review.py`) (0h new implementation; document + integrate)
+
+The gap between format correctness (Level 1) and state-machine enforcement (Level 3) is *semantic auditing*: after the LLM generates syntactically-valid `<refinement>` actions, are those actions *grounded in evidence*?
+
+`action_review.py` (356 lines, contributed by ziymeng in PR #1) fills this gap.  It is an evidence-aware refinement action auditor that operates between the REFINE and VALIDATE states.
+
+**Architecture**:
+
+```
+<refinement> text
+    │
+    ▼
+parse_refinement_block()          ← split into individual action strings
+    │
+    ▼
+review_action() × N               ← audit each action independently
+    │
+    ├── 1. Parse action → (fn, args) via _parse_action_string()
+    ├── 2. Node lookup: _matching_nodes() resolves entity names against
+    │      graph.json's "nodes" list; supports file::qualified_name syntax
+    ├── 3. Ambiguity detection: bare names like main(), run(), train()
+    │      are flagged as AMBIGUOUS_LABELS → LOW confidence
+    ├── 4. Edge existence: _edge_exists() checks if an insert_edge target
+    │      already exists in graph.json (duplicate prevention)
+    ├── 5. Code evidence grep: _has_code_evidence() opens source files
+    │      and regex-verifies claimed relations:
+    │      - method/defines:    class Subject ... def Object
+    │      - calls/uses:        def Subject ... Object()
+    │      - imports/from:      import Object
+    └── 6. Confidence assignment (L286-299):
+           warnings → LOW
+           code evidence | exact edge exists | replacement source → HIGH
+           other evidence, no direct proof → MEDIUM
+           nothing → LOW + "No direct evidence"
+    │
+    ▼
+ActionReview(action, confidence, evidence, warnings, suggested_replacement)
+```
+
+**Two integration points** (in `cli.py`):
+- **Explicit**: `deeprefine review` — audits without touching graph.json
+- **Implicit gate**: `deeprefine apply` — runs review internally; refuses when LOW-confidence actions detected (hard gate; `--allow-low-confidence` to override)
+
+**What it prevents**: Blind application of hallucinated or ungrounded refinement actions.  An LLM might generate `insert_edge("main()", "calls", "init()")` — syntactically valid, but `main()` matches dozens of nodes across files.  The auditor flags this as LOW confidence and blocks the write.
+
+**Key design insight**: This is an instance of the **"policy sinking" pattern** — moving a constraint from natural-language instruction (SKILL.md FORBIDDEN #4: "Ignore LOW-confidence review warnings") into hard Python enforcement.  The LLM can no longer skip the review step; the harness refuses to proceed without it.
+
+**Relationship to other levels**:
+- Level 1 ensures `<refinement>insert_edge(...)|...</refinement>` is syntactically valid
+- Level 1.5 ensures the **content** inside that valid syntax is evidence-backed
+- Level 3 ensures the state machine transitions are legal (REFINE → VALIDATE → APPLY)
+
+**Abbreviated analysis in Section 4 summary table**.
 
 #### 2.3 Harness Level 2: Deterministic k-hop Expansion (8h)
 
@@ -427,14 +481,75 @@ This is the core technical narrative of the project:
 |-------|------|-------------|----------|--------|
 | **0** | Post-hoc Validation | `validate_trace()` after full loop | Silent acceptance of bad traces | Exists in `agent_loop.py` |
 | **1** | Structured Output Enforcement | Real-time regex gate on each LLM output; retry on mismatch | Format errors in `<judge>`, `<abduction>`, `<refinement>` | Phase 2.2 |
+| **1.5** | Semantic Evidence Audit | Per-action evidence check: node existence, ambiguity detection, code grep, duplicate prevention; hard gate in `apply` | Hallucinated entities, ambiguous bare names, duplicate edges, ungrounded relations | Exists in `action_review.py` (PR #1) |
 | **2** | Deterministic k-hop Expansion | BFS from Python, not LLM discretion | Entity selection errors, missed neighbours | Phase 2.3 |
 | **3** | State Machine Enforcement | Hard transitions with guard conditions; inline checkpoints | Step skipping, order violation, early-exit logic errors | Phase 2.4 |
 
-Each level builds on the previous and incrementally reduces the LLM's degrees of freedom. The levels can be toggled for ablation studies (thesis Chapter 5).
+Each level builds on the previous and incrementally reduces the LLM's degrees of freedom.  Levels 0, 1.5 are already implemented; Levels 1, 2, 3 remain to be built.  All levels can be toggled for ablation studies (thesis Chapter 5).
 
 ---
 
-## 5. Risks & Mitigations
+## 5. Platform Adaptation Methodology
+
+This section documents an observed methodological difference between two
+adaptation approaches, discovered during Phase 1 code audit of upstream
+contributions.
+
+### 5.1 Two Adaptation Strategies
+
+The DeepRefine skill has been adapted to two platforms through two distinct
+engineering strategies:
+
+| Dimension | Copilot CLI (our work) | Gemini CLI (ziymeng, PR #2) |
+|-----------|----------------------|---------------------------|
+| **Strategy** | Content adapter | Platform-native extension |
+| **Deliverable** | 1 Markdown file (`SKILL_COPILOT.md`) | Extension directory tree (manifest + context file + command TOMLs + skill SKILL.md) |
+| **Command registration** | Implicit (description-based auto-match) | Explicit (`commands/*.toml` with prompt templates) |
+| **Pre-execution hooks** | None (LLM reads SKILL.md and runs commands sequentially) | `!{...}` shell injection in TOML prompt — runs `history sync-memory`, `find` before LLM sees context |
+| **Install methods** | 1: copy file | 3: `link` (symlink via Gemini manager), `install` (copy via Gemini manager), `copy-only` (manual fallback) |
+| **Multi-command support** | Simulated via natural-language mode detection preamble in SKILL.md | Native via 3 TOML-defined slash commands (`/deeprefine`, `/deeprefine:review`, `/deeprefine:apply`) |
+
+### 5.2 Key Insight: Pre-Execution Context Injection
+
+The Gemini CLI TOML `prompt` field supports `!{shell command}` blocks that
+execute **before** the LLM receives the conversation context.  This means
+discovery commands (`deeprefine history sync-memory`, `find graphify-out`,
+`deeprefine history list --pending`) are pre-run and their output injected into
+the initial context — the LLM never has to remember to run them.
+
+For platforms without native pre-execution hooks (Copilot CLI), we simulate
+this with a **mode detection preamble** in `SKILL_COPILOT.md` that instructs
+the LLM to run discovery commands first and switch behaviour based on user
+intent keywords.
+
+### 5.3 "Policy Sinking" as a General Principle
+
+Both the dry-run review system (PR #1) and our harness roadmap (Phase 2)
+exemplify the same design pattern: **moving constraints from natural-language
+instructions into hard Python enforcement**.
+
+```
+Natural-language rule          →    Python enforcement
+──────────────────────────────────────────────────────────
+"Do NOT call apply before        →   cmd_apply runs review
+ review" (SKILL.md FORBIDDEN #3)     internally; refuses LOW
+                                     confidence
+
+"Ignore LOW-confidence review    →   --allow-low-confidence
+ warnings" (FORBIDDEN #4)             flag required to bypass
+
+"Run deeprefine loop validate    →   validate_trace() called
+ before apply" (FORBIDDEN #2)         inside cmd_apply before
+                                      touching graph.json
+```
+
+The pattern: every NL rule in the FORBIDDEN list should have a corresponding
+Python gate.  The NL rule is the *specification*; the Python gate is the
+*enforcement*.  This is the through-line connecting Phase 2.2–2.4.
+
+---
+
+## 6. Risks & Mitigations
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
@@ -447,7 +562,7 @@ Each level builds on the previous and incrementally reduces the LLM's degrees of
 
 ---
 
-## 6. Milestone Timeline
+## 7. Milestone Timeline
 
 ```
 Week 1  ██ Environment setup + paper deep-read
