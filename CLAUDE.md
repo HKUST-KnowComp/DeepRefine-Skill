@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DeepRefine-Skill is an agent skill that refines graphify knowledge graphs using the Reafiner algorithm (8-step state machine: INIT → RETRIEVE → JUDGE → RETRIEVE_KHOP → ABDUCE → REFINE → VALIDATE → APPLY → FINISH). It ships as `deeprefine-cli` on PyPI (v0.1.8) and supports Cursor, Copilot CLI, and Gemini CLI.
 
-The project roadmap and technical architecture are documented in `docs/PROJECT-PLAN.md`.
-
 ## Architecture
 
 The codebase separates framework-agnostic Python logic from framework-specific instruction files.
@@ -60,14 +58,20 @@ The `deeprefine apply` command internally calls `validate_trace()` and the `acti
 
 ## Harness Architecture
 
-The runtime harness progressively constrains LLM behaviour. Current levels:
+The runtime harness enforces Reafiner protocol constraints at multiple levels.
+Implemented components:
 
-| Level | Name | Where |
-|-------|------|-------|
-| 0 | Post-hoc trace validation | `agent_loop.py` — `validate_trace()` |
-| 1.5 | Semantic evidence audit | `action_review.py` — per-action node/edge/code-evidence check; hard gate in `apply` |
+- **Trace validation** (`agent_loop.py`): `validate_trace()` checks that a
+  completed `loop_trace_*.json` matches the Reafiner control flow — correct
+  step ordering, required fields per step, valid retrieval methods.
+- **Evidence audit** (`action_review.py`): Before `deeprefine apply` writes to
+  `graph.json`, each proposed refinement action is audited against the live
+  graph.  Node existence, edge duplication, ambiguous entity names, and source
+  code evidence are checked.  LOW-confidence actions are rejected unless
+  `--allow-low-confidence` is passed.
 
-All harness components are framework-agnostic Python — reusable across platforms without modification.
+All harness components are framework-agnostic Python — reusable across
+platforms without modification.
 
 ## Development Commands
 
@@ -89,7 +93,7 @@ pip install mypy
 mypy deeprefine_skill/
 ```
 
-No test suite or CI exists yet. Test coverage is 0%.
+A test suite and CI pipeline are not yet configured.
 
 ## Key Constraints
 
