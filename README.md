@@ -23,8 +23,6 @@
 [![Paper](https://img.shields.io/badge/Paper-DeepRefine-b31b1b.svg)](https://arxiv.org/pdf/2605.10488)
 [![Project](https://img.shields.io/badge/Project-DeepRefine-green.svg)](https://github.com/HKUST-KnowComp/DeepRefine)
 
-<img src="assets/harness.png" alt="workflow" width="360">
-
 </div>
 
 DeepRefine-Skill plugs into agent workflows and use a single command `/deeprefine` in your agent CLI to refine and evolve your LLM-Wiki (e.g., **[graphify](https://github.com/safishamsi/graphify)**) knowledge base.
@@ -35,9 +33,17 @@ DeepRefine-Skill plugs into agent workflows and use a single command `/deeprefin
 
 It refines your graphify knowledge graph for better future retrieval and Q&A quality.
 
+Supported agent frameworks:
+
+<p>
+  <a href="https://cursor.com" title="Cursor"><img src="./assets/cursor_CUBE_25D.png" alt="Cursor" height="40"/></a>&nbsp;&nbsp;
+  <a href="https://github.com/google-gemini/gemini-cli" title="Gemini CLI"><img src="./assets/gemini-cli-icon_full-color@4x.png" alt="Gemini CLI" height="40"/></a>
+</p>
+
 ---
 
 ## News
+- **[2026/6/18] unreleased** - Gemini CLI supported.
 - **[2026/6/17] unreleased** - Added dry-run-first refinement, evidence-aware action review, ambiguous-node warnings, and LOW-confidence apply guard.
 - **[2026/6/15] v0.1.8** - Aligned interaction memory with LLM-Wiki (graphify) and fixed the single query refinement issue.
 - **[2026/6/2] v0.1.7** — Cursor skill + `deeprefine refine` with configurable API. And strict DeepRefine agent loop.
@@ -46,15 +52,6 @@ It refines your graphify knowledge graph for better future retrieval and Q&A qua
 
 This is the default mode and the main workflow for this project.
 
-### Why Agent CLI first
-
-- Uses your current Cursor session model (no separate API/vLLM setup required)
-- Follows the same control flow as `Reafiner.refine()`
-- Integrates with graphify query memory automatically
-- Handles pending queries in batch, one by one
-- Generates evidence-aware proposed actions before any graph write
-- Applies graph changes only after explicit user approval
-
 ### One-time setup
 
 ```bash
@@ -62,10 +59,14 @@ pip install deeprefine-cli graphifyy
 
 cd /path/to/your-kb-project
 graphify cursor install
+
+# for Cursor
 deeprefine cursor install
+# for Gemini CLI
+deeprefine gemini install # or deeprefine gemini link
 ```
 
-After upgrading the package, run `deeprefine cursor install` again to refresh local skill files.
+After upgrading the package, run the command again to refresh local skill files.
 
 ### Typical session (Agent CLI)
 
@@ -79,6 +80,8 @@ After upgrading the package, run `deeprefine cursor install` again to refresh lo
 ```
 
 ### What `/deeprefine` does now (default queue behavior)
+<details>
+<summary><strong>Procedures:</strong></summary>
 
 When you run `/deeprefine`, it should follow this order:
 
@@ -91,6 +94,7 @@ When you run `/deeprefine`, it should follow this order:
 5. stop in dry-run mode and show the review report; do **not** modify `graph.json` yet
 6. only after user approval, run `deeprefine apply` and then `deeprefine loop finish`
 
+</details>
 
 ### Agent artifacts
 
@@ -118,6 +122,11 @@ Run from your KB project root.
 |---------|-------------|
 | `deeprefine cursor install` | Install `/deeprefine` skill into current project |
 | `deeprefine cursor install --user` | Install skill for all projects (`~/.cursor/skills/`) |
+| `deeprefine gemini path` | Print the extension root used for Gemini CLI |
+| `deeprefine gemini link` | Link the current source checkout with `gemini extensions link` |
+| `deeprefine gemini install` | Install the bundled extension with `gemini extensions install` |
+| `deeprefine gemini install --copy-only` | Manual fallback copy to `~/.gemini/extensions/deeprefine-skill` |
+| `deeprefine gemini uninstall` | Remove the extension with Gemini CLI's manager |
 | `deeprefine history sync-memory` | Import `graphify-out/memory/query_*.md` into DeepRefine history |
 | `deeprefine history list --pending` | Show unrefined queue |
 | `deeprefine loop init --query "..."` | Create `loop_trace_<id>.json` template |
@@ -149,6 +158,9 @@ GOOD: insert_edge("pretraining/pretraining_CLIP_fine-grained.py::main()", "calls
 ---
 
 ## Gemini CLI Integration
+
+<details>
+<summary><strong>Setup, commands, and session usage</strong></summary>
 
 DeepRefine can also be used as a Gemini CLI extension. This keeps the same safe,
 dry-run-first DeepRefine workflow while making `/deeprefine` available inside
@@ -215,9 +227,14 @@ The extension files are located at the repository root and are also bundled unde
 `deeprefine_skill/gemini_extension/` for wheel installs. See
 [`docs/gemini-cli.md`](docs/gemini-cli.md) for details.
 
+</details>
+
 ---
 
 ## Terminal CLI (FAISS + API/vLLM)
+
+<details>
+<summary><strong>Requirements, environment, workflow, and commands</strong></summary>
 
 Use this section when you want a pure terminal workflow without Cursor `/deeprefine`.
 
@@ -277,7 +294,7 @@ deeprefine refine          # dry-run by default
 | `deeprefine refine --rebuild-index` | Rebuild FAISS before refine |
 | `deeprefine index --rebuild` | Rebuild FAISS cache only |
 
----
+
 
 ## Installation
 
@@ -290,6 +307,7 @@ deeprefine refine          # dry-run by default
 deeprefine --help
 # Expect: cursor, gemini, history, index, refine, review, apply, loop
 ```
+</details>
 
 ---
 
