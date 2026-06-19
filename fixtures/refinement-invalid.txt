@@ -1,0 +1,3 @@
+this is not a valid refinement block
+no tags here
+just random text
