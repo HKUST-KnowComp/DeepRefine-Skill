@@ -14,7 +14,13 @@ import json
 import sys
 from pathlib import Path
 
-TOP_LEVEL_KEYS = {"nodes", "edges", "hyperedges", "input_tokens", "output_tokens"}
+# nodes, hyperedges are required.
+# 'edges' or 'links' — at least one must be present.
+# input_tokens/output_tokens are only present when graphify does LLM extraction;
+# they are optional.
+TOP_LEVEL_REQUIRED = {"nodes", "hyperedges"}
+TOP_LEVEL_EDGE_KEYS = {"edges", "links"}
+TOP_LEVEL_OPTIONAL = {"input_tokens", "output_tokens", "directed", "multigraph", "graph", "built_at_commit"}
 NODE_REQUIRED_KEYS = {"id", "label", "source_file"}
 EDGE_REQUIRED_KEYS = {"source", "target", "relation", "confidence", "confidence_score", "source_file"}
 VALID_CONFIDENCE = {"EXTRACTED", "INFERRED", "AMBIGUOUS"}
@@ -24,9 +30,17 @@ def validate_graph(data: dict) -> list[str]:
     errors: list[str] = []
 
     # --- top-level keys ---
-    for key in TOP_LEVEL_KEYS:
+    for key in TOP_LEVEL_REQUIRED:
         if key not in data:
-            errors.append(f"missing top-level key: {key!r}")
+            errors.append(f"missing required top-level key: {key!r}")
+
+    has_edge_key = any(k in data for k in TOP_LEVEL_EDGE_KEYS)
+    if not has_edge_key:
+        errors.append(f"missing edge key — need one of: {TOP_LEVEL_EDGE_KEYS}")
+
+    for key in TOP_LEVEL_OPTIONAL:
+        if key not in data:
+            pass  # optional — no error
 
     nodes: list[dict] = data.get("nodes", [])
     edges: list[dict] = data.get("edges", data.get("links", []))
