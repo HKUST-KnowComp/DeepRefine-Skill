@@ -8,6 +8,12 @@ build/
 *.pkl
 .DS_Store
 
+# Virtual environment
+.venv/
+
+# Graphify output (generated locally, not committed)
+graphify-out/
+
 # Personal working documents — kept locally, not distributed
 docs/tmp/
 CLAUDE.local.md

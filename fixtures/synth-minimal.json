@@ -1,0 +1,193 @@
+{
+  "nodes": [
+    {
+      "id": "validate_trace",
+      "label": "validate_trace",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/agent_loop.py",
+      "source_location": "L44",
+      "community": "harness"
+    },
+    {
+      "id": "Reafiner",
+      "label": "Reafiner",
+      "file_type": "document",
+      "source_file": "README.md",
+      "community": "concept"
+    },
+    {
+      "id": "action_review",
+      "label": "action_review",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/action_review.py",
+      "source_location": "L1",
+      "community": "harness"
+    },
+    {
+      "id": "graph_json",
+      "label": "graph.json",
+      "file_type": "document",
+      "source_file": "README.md",
+      "community": "data"
+    },
+    {
+      "id": "apply_refinement_text",
+      "label": "apply_refinement_text",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/agent_graph.py",
+      "source_location": "L139",
+      "community": "operations"
+    },
+    {
+      "id": "loop_trace",
+      "label": "loop_trace",
+      "file_type": "document",
+      "source_file": "deeprefine_skill/agent_loop.py",
+      "community": "data"
+    },
+    {
+      "id": "deeprefine",
+      "label": "deeprefine",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/cli.py",
+      "source_location": "L1",
+      "community": "entrypoint"
+    },
+    {
+      "id": "agent_prompts",
+      "label": "agent_prompts",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/agent_prompts.py",
+      "source_location": "L1",
+      "community": "prompts"
+    },
+    {
+      "id": "history_jsonl",
+      "label": "history.jsonl",
+      "file_type": "document",
+      "source_file": "deeprefine_skill/history.py",
+      "community": "data"
+    },
+    {
+      "id": "query_id",
+      "label": "query_id",
+      "file_type": "code",
+      "source_file": "deeprefine_skill/history.py",
+      "source_location": "L12",
+      "community": "operations"
+    }
+  ],
+  "edges": [
+    {
+      "source": "validate_trace",
+      "target": "Reafiner",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/agent_loop.py",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "validate_trace",
+      "target": "loop_trace",
+      "relation": "reads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/agent_loop.py",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "action_review",
+      "target": "validate_trace",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/action_review.py",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apply_refinement_text",
+      "target": "graph_json",
+      "relation": "modifies",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/agent_graph.py",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "deeprefine",
+      "target": "validate_trace",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/cli.py",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "deeprefine",
+      "target": "apply_refinement_text",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/cli.py",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "deeprefine",
+      "target": "history_jsonl",
+      "relation": "reads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/cli.py",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "deeprefine",
+      "target": "loop_trace",
+      "relation": "writes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deeprefine_skill/cli.py",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "agent_prompts",
+      "target": "Reafiner",
+      "relation": "defines",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "deeprefine_skill/agent_prompts.py",
+      "weight": 1.0
+    },
+    {
+      "source": "history_jsonl",
+      "target": "query_id",
+      "relation": "tracks",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "deeprefine_skill/history.py",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "deeprefine",
+      "target": "graph_json",
+      "relation": "modifies",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "deeprefine_skill/cli.py",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
