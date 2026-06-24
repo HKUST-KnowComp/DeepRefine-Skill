@@ -38,10 +38,8 @@ Supported agent frameworks:
 <p>
   <a href="https://cursor.com" title="Cursor"><img src="./assets/cursor_CUBE_25D.png" alt="Cursor" height="40"/></a>&nbsp;&nbsp;
   <a href="https://github.com/google-gemini/gemini-cli" title="Gemini CLI"><img src="./assets/gemini-cli-icon_full-color@4x.png" alt="Gemini CLI" height="40"/></a>&nbsp;&nbsp;
-  <a href="https://docs.github.com/en/copilot" title="GitHub Copilot CLI" style="text-decoration: none; color: inherit;">
-  <img src="./assets/github-copilot__1_-removebg-preview.png" height="40" style="vertical-align: middle;" alt="Copilot Icon" />
-</a>&nbsp;&nbsp;
-  <span title="Codex"><strong>Codex</strong></span>
+  <a href="https://docs.github.com/en/copilot" title="GitHub Copilot CLI" style="text-decoration: none; color: inherit;"><img src="./assets/github-copilot__1_-removebg-preview.png" height="40" style="vertical-align: middle;" alt="Copilot Icon" /></a>&nbsp;&nbsp;
+  <a href="https://openai.com/codex/" title="Codex CLI" style="text-decoration: none; color: inherit;"><img src="./assets/codex-color.png" height="40" style="vertical-align: middle;" alt="Copilot Icon" /></a>&nbsp;&nbsp;
 </p>
 
 ---
