@@ -15,6 +15,11 @@ from pathlib import Path
 
 _SKILL_MD_NAME = "SKILL.md"
 _SKILL_COPILOT_MD_NAME = "SKILL_COPILOT.md"
+_CODEX_SKILL_DIR = "codex_skill"
+_CODEX_AGENTS_DIR = "agents"
+_CODEX_REFERENCES_DIR = "references"
+_LEGACY_CODEX_AGENT_LOOP_REF_NAME = "deeprefine-agent-loop.md"
+_OPENAI_YAML_NAME = "openai.yaml"
 _GEMINI_EXTENSION_NAME = "deeprefine-skill"
 
 # ---------------------------------------------------------------------------
@@ -44,6 +49,42 @@ def skill_md_path() -> Path:
 def skill_md_path_copilot() -> Path:
     """Return the path to the Copilot CLI SKILL_COPILOT.md source."""
     return _resolve_skill_source(_SKILL_COPILOT_MD_NAME)
+
+
+def skill_md_path_codex() -> Path:
+    """Return the path to the Codex SKILL.md source."""
+    return codex_skill_template_path() / _SKILL_MD_NAME
+
+
+def codex_openai_yaml_path() -> Path:
+    """Return the Codex agents/openai.yaml metadata source."""
+    return codex_skill_template_path() / _CODEX_AGENTS_DIR / _OPENAI_YAML_NAME
+
+
+def codex_references_path() -> Path:
+    """Return the Codex references template directory."""
+    refs = codex_skill_template_path() / _CODEX_REFERENCES_DIR
+    if refs.is_dir():
+        return refs
+    raise FileNotFoundError(
+        "Missing Codex references template (expected under "
+        "deeprefine_skill/codex_skill/references/)."
+    )
+
+
+def codex_skill_template_path() -> Path:
+    """Return the Codex skill template directory."""
+    bundled = Path(__file__).resolve().parent / _CODEX_SKILL_DIR
+    if (bundled / _SKILL_MD_NAME).is_file():
+        return bundled
+    repo_root = Path(__file__).resolve().parents[1]
+    fallback = repo_root / "deeprefine_skill" / _CODEX_SKILL_DIR
+    if (fallback / _SKILL_MD_NAME).is_file():
+        return fallback
+    raise FileNotFoundError(
+        "Missing Codex skill template (expected under "
+        "deeprefine_skill/codex_skill/)."
+    )
 
 
 def gemini_extension_path(*, prefer_repo: bool = True) -> Path:
@@ -178,6 +219,80 @@ def uninstall_copilot_skill(*, project: bool) -> bool:
                 pass
         return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# Codex
+# ---------------------------------------------------------------------------
+
+
+def install_codex_skill(*, project: bool) -> Path:
+    """Install the Codex skill into ``.agents/skills/deeprefine/``.
+
+    Parameters
+    ----------
+    project : bool
+        If *True*, install under the current working directory
+        (``.agents/skills/deeprefine/``). If *False*, install under
+        ``~/.codex/skills/deeprefine/`` (user-wide).
+
+    Returns
+    -------
+    Path
+        Destination path of the installed ``SKILL.md``.
+    """
+    src_skill = skill_md_path_codex()
+    src_references = codex_references_path()
+    src_metadata = codex_openai_yaml_path()
+    if project:
+        dest_dir = Path.cwd() / ".agents" / "skills" / "deeprefine"
+    else:
+        dest_dir = Path.home() / ".codex" / "skills" / "deeprefine"
+    metadata_dir = dest_dir / "agents"
+    references_dir = dest_dir / _CODEX_REFERENCES_DIR
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+    references_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_skill, dest_dir / _SKILL_MD_NAME)
+    shutil.copy2(src_metadata, metadata_dir / _OPENAI_YAML_NAME)
+    legacy_ref = references_dir / _LEGACY_CODEX_AGENT_LOOP_REF_NAME
+    if legacy_ref.is_file():
+        legacy_ref.unlink()
+    for ref in src_references.glob("*.md"):
+        shutil.copy2(ref, references_dir / ref.name)
+    return dest_dir / _SKILL_MD_NAME
+
+
+def uninstall_codex_skill(*, project: bool) -> bool:
+    """Remove a previously installed Codex skill."""
+    if project:
+        dest_dir = Path.cwd() / ".agents" / "skills" / "deeprefine"
+    else:
+        dest_dir = Path.home() / ".codex" / "skills" / "deeprefine"
+
+    removed = False
+    for dest in [
+        dest_dir / _SKILL_MD_NAME,
+        dest_dir / "agents" / _OPENAI_YAML_NAME,
+        dest_dir / _CODEX_REFERENCES_DIR / "reafiner-workflow.md",
+        dest_dir / _CODEX_REFERENCES_DIR / "llm-prompts.md",
+        dest_dir / _CODEX_REFERENCES_DIR / "trace-and-commands.md",
+        dest_dir / _CODEX_REFERENCES_DIR / _LEGACY_CODEX_AGENT_LOOP_REF_NAME,
+    ]:
+        if dest.is_file():
+            dest.unlink()
+            removed = True
+
+    for parent in [
+        dest_dir / "agents",
+        dest_dir / _CODEX_REFERENCES_DIR,
+        dest_dir,
+        dest_dir.parent,
+    ]:
+        try:
+            parent.rmdir()
+        except OSError:
+            pass
+    return removed
 
 
 # ---------------------------------------------------------------------------

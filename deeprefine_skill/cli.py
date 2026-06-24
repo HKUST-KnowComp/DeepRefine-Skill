@@ -23,10 +23,12 @@ from deeprefine_skill.history import (
 from deeprefine_skill.installers import (
     copy_gemini_extension,
     gemini_extension_path,
+    install_codex_skill,
     install_copilot_skill,
     install_cursor_skill,
     install_gemini_extension,
     link_gemini_extension,
+    uninstall_codex_skill,
     uninstall_copilot_skill,
     uninstall_cursor_skill,
     uninstall_gemini_extension,
@@ -99,6 +101,32 @@ def cmd_copilot_uninstall(args: argparse.Namespace) -> int:
 def cmd_install(args: argparse.Namespace) -> int:
     """Alias for ``deeprefine cursor install`` (graphify-compatible naming)."""
     return cmd_cursor_install(args)
+
+
+# ---------------------------------------------------------------------------
+# Codex handlers
+# ---------------------------------------------------------------------------
+
+
+def cmd_codex_install(args: argparse.Namespace) -> int:
+    """``deeprefine codex install`` - install SKILL.md for Codex."""
+    dest = install_codex_skill(project=args.project)
+    scope = "project" if args.project else "user"
+    print(f"Installed DeepRefine Codex skill ({scope}) -> {dest}")
+    if args.project:
+        print("Restart or reload Codex, then invoke $deeprefine or /deeprefine.")
+    return 0
+
+
+def cmd_codex_uninstall(args: argparse.Namespace) -> int:
+    """``deeprefine codex uninstall`` - remove the Codex skill."""
+    removed = uninstall_codex_skill(project=args.project)
+    if removed:
+        scope = "project" if args.project else "user"
+        print(f"Removed DeepRefine Codex skill ({scope}).")
+    else:
+        print("Skill not installed at the selected scope.")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -503,18 +531,23 @@ def cmd_refine(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _add_project_flag(parser: argparse.ArgumentParser) -> None:
+def _add_project_flag(
+    parser: argparse.ArgumentParser,
+    *,
+    project_help: str = "Install to .cursor/skills in the current directory (default for cursor install)",
+    user_help: str = "Install to ~/.cursor/skills (all projects)",
+) -> None:
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--project",
         action="store_true",
         default=None,
-        help="Install to .cursor/skills in the current directory (default for cursor install)",
+        help=project_help,
     )
     group.add_argument(
         "--user",
         action="store_true",
-        help="Install to ~/.cursor/skills (all projects)",
+        help=user_help,
     )
 
 
@@ -560,12 +593,54 @@ def main(argv: list[str] | None = None) -> int:
     p_copi = copilot_sub.add_parser(
         "install", help="Install /deeprefine skill for Copilot CLI"
     )
-    _add_project_flag(p_copi)
+    _add_project_flag(
+        p_copi,
+        project_help=(
+            "Install to .github/skills/deeprefine in the current directory "
+            "(default for copilot install)"
+        ),
+        user_help="Install to ~/.copilot/skills/deeprefine (all projects)",
+    )
     p_copi.set_defaults(func=cmd_copilot_install, _default_project=True)
 
     p_copu = copilot_sub.add_parser("uninstall", help="Remove Copilot CLI skill")
-    _add_project_flag(p_copu)
+    _add_project_flag(
+        p_copu,
+        project_help=(
+            "Remove from .github/skills/deeprefine in the current directory "
+            "(default for copilot uninstall)"
+        ),
+        user_help="Remove from ~/.copilot/skills/deeprefine (all projects)",
+    )
     p_copu.set_defaults(func=cmd_copilot_uninstall, _default_project=True)
+
+    # deeprefine codex install | uninstall
+    p_codex = sub.add_parser("codex", help="Codex skill integration")
+    codex_sub = p_codex.add_subparsers(dest="codex_cmd", required=True)
+
+    p_codi = codex_sub.add_parser(
+        "install", help="Install $deeprefine skill for Codex"
+    )
+    _add_project_flag(
+        p_codi,
+        project_help=(
+            "Install to .agents/skills/deeprefine in the current directory "
+            "(default for codex install)"
+        ),
+        user_help="Install to ~/.codex/skills/deeprefine (all projects)",
+    )
+    p_codi.set_defaults(func=cmd_codex_install, _default_project=True)
+
+    p_codu = codex_sub.add_parser("uninstall", help="Remove Codex skill")
+    _add_project_flag(
+        p_codu,
+        project_help=(
+            "Remove from .agents/skills/deeprefine in the current directory "
+            "(default for codex uninstall)"
+        ),
+        user_help="Remove from ~/.codex/skills/deeprefine (all projects)",
+    )
+    p_codu.set_defaults(func=cmd_codex_uninstall, _default_project=True)
 
     # deeprefine gemini link | install | uninstall | path
     p_gemini = sub.add_parser("gemini", help="Gemini CLI integration")

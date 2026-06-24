@@ -3,6 +3,7 @@ include LICENSE
 include SKILL.md
 include SKILL_COPILOT.md
 include deeprefine_skill/SKILL_COPILOT.md
+recursive-include deeprefine_skill/codex_skill *
 
 include gemini-extension.json
 include GEMINI.md

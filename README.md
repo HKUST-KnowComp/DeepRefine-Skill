@@ -40,12 +40,14 @@ Supported agent frameworks:
   <a href="https://github.com/google-gemini/gemini-cli" title="Gemini CLI"><img src="./assets/gemini-cli-icon_full-color@4x.png" alt="Gemini CLI" height="40"/></a>&nbsp;&nbsp;
   <a href="https://docs.github.com/en/copilot" title="GitHub Copilot CLI" style="text-decoration: none; color: inherit;">
   <img src="./assets/github-copilot__1_-removebg-preview.png" height="40" style="vertical-align: middle;" alt="Copilot Icon" />
-</a>
+</a>&nbsp;&nbsp;
+  <span title="Codex"><strong>Codex</strong></span>
 </p>
 
 ---
 
 ## News
+- **[2026/6/24] unreleased** - Codex skill supported.
 - **[2026/6/18] unreleased** - Gemini CLI supported.
 - **[2026/6/17] unreleased** - Added dry-run-first refinement, evidence-aware action review, ambiguous-node warnings, and LOW-confidence apply guard.
 - **[2026/6/15] v0.1.8** - Aligned interaction memory with LLM-Wiki (graphify) and fixed the single query refinement issue.
@@ -69,6 +71,8 @@ deeprefine cursor install
 deeprefine copilot install
 # for Gemini CLI
 deeprefine gemini install # or deeprefine gemini link
+# for Codex
+deeprefine codex install
 ```
 
 After upgrading the package, run the command again to refresh local skill files.
@@ -130,6 +134,9 @@ Run from your KB project root.
 | `deeprefine copilot install` | Install `/deeprefine` skill for Copilot CLI (`.github/skills/deeprefine/`) |
 | `deeprefine copilot install --user` | Install Copilot CLI skill for all projects (`~/.copilot/skills/`) |
 | `deeprefine copilot uninstall` | Remove Copilot CLI skill |
+| `deeprefine codex install` | Install `$deeprefine` skill for Codex (`.agents/skills/deeprefine/`) |
+| `deeprefine codex install --user` | Install Codex skill for all projects (`~/.codex/skills/deeprefine/`) |
+| `deeprefine codex uninstall` | Remove Codex skill |
 | `deeprefine gemini path` | Print the extension root used for Gemini CLI |
 | `deeprefine gemini link` | Link the current source checkout with `gemini extensions link` |
 | `deeprefine gemini install` | Install the bundled extension with `gemini extensions install` |
@@ -162,6 +169,57 @@ GOOD: insert_edge("pretraining/pretraining_CLIP_fine-grained.py::main()", "calls
 ```
 
 `deeprefine apply` refuses LOW-confidence actions by default. Use `--allow-low-confidence` only when the user explicitly accepts the risk.
+
+---
+
+## Codex Integration
+
+<details>
+<summary><strong>Setup, commands, and session usage</strong></summary>
+
+DeepRefine works as a Codex skill. The installer writes the Codex-specific
+skill file to `.agents/skills/deeprefine/SKILL.md` and UI metadata to
+`.agents/skills/deeprefine/agents/openai.yaml`. It also installs focused
+references under `.agents/skills/deeprefine/references/` for the Reafiner
+workflow, LLM prompts, and trace/command details.
+
+### One-time setup
+
+```bash
+cd /path/to/your-kb-project
+pip install deeprefine-cli
+deeprefine codex install --project
+```
+
+After upgrading the package, run `deeprefine codex install --project` again to
+refresh the local skill files. Restart or reload Codex, then invoke:
+
+```text
+$deeprefine
+/deeprefine
+```
+
+### Codex commands
+
+| Command | Description |
+|---------|-------------|
+| `deeprefine codex install` | Install the Codex skill into `.agents/skills/deeprefine/` |
+| `deeprefine codex install --user` | Install the Codex skill into `~/.codex/skills/deeprefine/` |
+| `deeprefine codex uninstall` | Remove the Codex skill |
+
+### Codex session
+
+```text
+$deeprefine
+```
+
+Codex runs the full agent-native Reafiner loop for pending queries, stops after
+`deeprefine review`, and presents the HIGH/MEDIUM/LOW report. Reply with an
+explicit apply/approve message only after reviewing the proposed actions.
+
+See [`docs/codex.md`](docs/codex.md) for details.
+
+</details>
 
 ---
 
@@ -374,7 +432,7 @@ deeprefine refine          # dry-run by default
 
 ```bash
 deeprefine --help
-# Expect: cursor, copilot, gemini, history, index, refine, review, apply, loop
+# Expect: cursor, copilot, codex, gemini, history, index, refine, review, apply, loop
 ```
 </details>
 

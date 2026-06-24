@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "deeprefine-cli"
 version = "0.1.8"
-description = "CLI and agent skills (Cursor, Copilot CLI, Gemini CLI) to refine graphify knowledge graphs with DeepRefine"
+description = "CLI and agent skills (Cursor, Copilot CLI, Gemini CLI, Codex) to refine graphify knowledge graphs with DeepRefine"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     {name = "HKUST-KnowComp"},
 ]
-keywords = ["deeprefine", "graphify", "knowledge-graph", "rag", "cursor", "copilot", "copilot-cli", "gemini-cli", "gemini", "agent-skill"]
+keywords = ["deeprefine", "graphify", "knowledge-graph", "rag", "cursor", "copilot", "copilot-cli", "gemini-cli", "gemini", "codex", "agent-skill"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -45,6 +45,9 @@ include = ["deeprefine_skill*"]
 deeprefine_skill = [
     "SKILL.md",
     "SKILL_COPILOT.md",
+    "codex_skill/SKILL.md",
+    "codex_skill/agents/openai.yaml",
+    "codex_skill/references/*.md",
     "gemini_extension/gemini-extension.json",
     "gemini_extension/GEMINI.md",
     "gemini_extension/commands/*.toml",

@@ -1,0 +1,7 @@
+interface:
+  display_name: "DeepRefine"
+  short_description: "Dry-run-first DeepRefine workflow for Graphify knowledge graphs."
+  default_prompt: "Use $deeprefine to review and refine the Graphify knowledge graph for this project."
+
+policy:
+  allow_implicit_invocation: true
