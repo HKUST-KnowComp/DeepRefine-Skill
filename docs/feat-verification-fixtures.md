@@ -208,21 +208,3 @@ When graphify introduces new fields or changes existing ones, the validator
 may need updates.  The known differences (Phase B) are already handled.  If
 you encounter new ones, update `TOP_LEVEL_REQUIRED`, `TOP_LEVEL_OPTIONAL`, or
 `TOP_LEVEL_EDGE_KEYS` in `scripts/validate_graph_schema.py`.
-
-## Files Changed
-
-```
- .gitignore                           |   6 +
- docs/phase-b-report.md               | 121 ++++++++++++++++
- docs/verification-data.md            | 157 ++++++++++++++++++++
- docs/feat-verification-fixtures.md   |  this file
- fixtures/refinement-ambiguous.txt    |   1 +
- fixtures/refinement-good.txt         |   1 +
- fixtures/refinement-invalid.txt      |   3 +
- fixtures/synth-minimal.json          | 193 +++++++++++++++++++++++
- fixtures/trace-invalid-order.json    |  57 +++++++
- fixtures/trace-valid-early-exit.json |  43 ++++++
- fixtures/trace-valid.json            |  87 +++++++++++
- scripts/validate_graph_schema.py     | 141 ++++++++++++++++
- 12 files changed, 810 insertions(+)
-```
