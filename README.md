@@ -355,6 +355,75 @@ The extension files are located at the repository root and are also bundled unde
 
 </details>
 
+## OpenCode Integration
+
+<details>
+<summary><strong>Setup, commands, and session usage</strong></summary>
+
+### Prerequisites
+
+- **OpenCode CLI** installed and configured
+- **graphify** CLI available on your PATH
+- **Python 3.10+** with `deeprefine-cli` installed
+- A `graphify-out/graph.json` knowledge graph in your project
+
+### Setup
+
+```bash
+# Install into the current project
+deeprefine opencode install --project
+
+# Install globally (all projects)
+deeprefine opencode install --user
+```
+
+This installs **4 files**:
+
+| Destination | Source | Purpose |
+|------------|--------|---------|
+| `.opencode/skills/deeprefine/SKILL.md` | `SKILL_OPENCODE.md` | Agent harness with 6 OpenCode-native optimizations |
+| `.opencode/commands/deeprefine.md` | `commands/opencode/deeprefine.md` | Full workflow entrypoint (`/deeprefine`) |
+| `.opencode/commands/deeprefine-review.md` | `commands/opencode/deeprefine-review.md` | Review-only entrypoint (`/deeprefine-review`) |
+| `.opencode/commands/deeprefine-apply.md` | `commands/opencode/deeprefine-apply.md` | Apply-only entrypoint (`/deeprefine-apply`) |
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/deeprefine` | Full pipeline: sync → judge → abduction → refinement → 5-Oracle review → (await approval) → apply → post-apply verify |
+| `/deeprefine-review` | Review only: read existing actions → 5-Oracle audit → evidence review → present results |
+| `/deeprefine-apply` | Apply only: read reviewed actions → confirm → apply → post-apply verify → finish |
+
+### Model Configuration
+
+OpenCode supports per-phase model routing via environment variables:
+
+| Variable | Phase | Purpose |
+|----------|-------|---------|
+| `DEEPREFINE_JUDGE_MODEL` | Judgement (`<judge>Yes/No</judge>`) | Fast, cheap model for binary classification (e.g., `gpt-4o-mini`) |
+| `DEEPREFINE_REFINE_MODEL` | Abduction + Refinement | Strong reasoning model for complex causal analysis (e.g., `claude-sonnet-4-20250514`) |
+
+If either variable is unset, the session default model is used.
+
+### OpenCode-Native Optimizations
+
+DeepRefine on OpenCode includes 6 platform-native optimizations not available in Cursor or Cline:
+
+1. **Parallel query processing** — Multiple pending queries are dispatched to parallel subagents via `task()`, reducing wall-clock time to ~1 query's duration
+2. **Phase-specific model routing** — Binary judgement uses a cheap model; complex abduction/refinement uses a strong model
+3. **Structured progress tracking** — `todowrite()` replaces text checklists, enabling real-time progress visibility and cross-session resumption
+4. **5-Oracle parallel review** — Five specialized oracle subagents audit refinement actions from orthogonal angles (completeness, correctness, safety, consistency, edge-cases) before any graph mutation
+5. **Post-apply auto-verification** — After applying refinement actions, the original query is re-run to confirm the graph fix actually resolved the issue
+6. **Evidence ledger** — Every phase boundary writes a structured JSONL entry (`graphify-out/.deeprefine/ledger.jsonl`) with timestamps, artifacts, and QA results for full auditability
+
+### Uninstall
+
+```bash
+deeprefine opencode uninstall --project
+```
+</details>
+
+
 ---
 
 ## Terminal CLI (FAISS + API/vLLM)
@@ -419,72 +488,6 @@ deeprefine refine          # dry-run by default
 | `deeprefine refine --apply` | Persist accepted CLI refine changes to `graph.json` |
 | `deeprefine refine --rebuild-index` | Rebuild FAISS before refine |
 | `deeprefine index --rebuild` | Rebuild FAISS cache only |
-
-
-
-## OpenCode Integration
-
-### Prerequisites
-
-- **OpenCode CLI** installed and configured
-- **graphify** CLI available on your PATH
-- **Python 3.10+** with `deeprefine-cli` installed
-- A `graphify-out/graph.json` knowledge graph in your project
-
-### Setup
-
-```bash
-# Install into the current project
-deeprefine opencode install --project
-
-# Install globally (all projects)
-deeprefine opencode install --user
-```
-
-This installs **4 files**:
-
-| Destination | Source | Purpose |
-|------------|--------|---------|
-| `.opencode/skills/deeprefine/SKILL.md` | `SKILL_OPENCODE.md` | Agent harness with 6 OpenCode-native optimizations |
-| `.opencode/commands/deeprefine.md` | `commands/opencode/deeprefine.md` | Full workflow entrypoint (`/deeprefine`) |
-| `.opencode/commands/deeprefine-review.md` | `commands/opencode/deeprefine-review.md` | Review-only entrypoint (`/deeprefine-review`) |
-| `.opencode/commands/deeprefine-apply.md` | `commands/opencode/deeprefine-apply.md` | Apply-only entrypoint (`/deeprefine-apply`) |
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/deeprefine` | Full pipeline: sync → judge → abduction → refinement → 5-Oracle review → (await approval) → apply → post-apply verify |
-| `/deeprefine-review` | Review only: read existing actions → 5-Oracle audit → evidence review → present results |
-| `/deeprefine-apply` | Apply only: read reviewed actions → confirm → apply → post-apply verify → finish |
-
-### Model Configuration
-
-OpenCode supports per-phase model routing via environment variables:
-
-| Variable | Phase | Purpose |
-|----------|-------|---------|
-| `DEEPREFINE_JUDGE_MODEL` | Judgement (`<judge>Yes/No</judge>`) | Fast, cheap model for binary classification (e.g., `gpt-4o-mini`) |
-| `DEEPREFINE_REFINE_MODEL` | Abduction + Refinement | Strong reasoning model for complex causal analysis (e.g., `claude-sonnet-4-20250514`) |
-
-If either variable is unset, the session default model is used.
-
-### OpenCode-Native Optimizations
-
-DeepRefine on OpenCode includes 6 platform-native optimizations not available in Cursor or Cline:
-
-1. **Parallel query processing** — Multiple pending queries are dispatched to parallel subagents via `task()`, reducing wall-clock time to ~1 query's duration
-2. **Phase-specific model routing** — Binary judgement uses a cheap model; complex abduction/refinement uses a strong model
-3. **Structured progress tracking** — `todowrite()` replaces text checklists, enabling real-time progress visibility and cross-session resumption
-4. **5-Oracle parallel review** — Five specialized oracle subagents audit refinement actions from orthogonal angles (completeness, correctness, safety, consistency, edge-cases) before any graph mutation
-5. **Post-apply auto-verification** — After applying refinement actions, the original query is re-run to confirm the graph fix actually resolved the issue
-6. **Evidence ledger** — Every phase boundary writes a structured JSONL entry (`graphify-out/.deeprefine/ledger.jsonl`) with timestamps, artifacts, and QA results for full auditability
-
-### Uninstall
-
-```bash
-deeprefine opencode uninstall --project
-```
 
 
 
