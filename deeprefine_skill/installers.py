@@ -1,10 +1,10 @@
-"""Installers for agent-platform skill files (Cursor, Copilot CLI, Gemini CLI).
+"""Installers for agent-platform skill files (Cursor, Copilot CLI, Gemini CLI, OpenCode).
 
 Each platform has a source SKILL.md variant (SKILL.md for Cursor,
-SKILL_COPILOT.md for Copilot CLI, gemini_extension/ for Gemini CLI)
-bundled in the wheel or found at the repo root during editable installs.
-The install/remove functions copy the appropriate variant into the
-platform-specific directory.
+SKILL_COPILOT.md for Copilot CLI, gemini_extension/ for Gemini CLI,
+SKILL_OPENCODE.md for OpenCode) bundled in the wheel or found at the
+repo root during editable installs. The install/remove functions copy
+the appropriate variant into the platform-specific directory.
 """
 
 from __future__ import annotations
@@ -15,12 +15,14 @@ from pathlib import Path
 
 _SKILL_MD_NAME = "SKILL.md"
 _SKILL_COPILOT_MD_NAME = "SKILL_COPILOT.md"
+_SKILL_OPENCODE_MD_NAME = "SKILL_OPENCODE.md"
 _CODEX_SKILL_DIR = "codex_skill"
 _CODEX_AGENTS_DIR = "agents"
 _CODEX_REFERENCES_DIR = "references"
 _LEGACY_CODEX_AGENT_LOOP_REF_NAME = "deeprefine-agent-loop.md"
 _OPENAI_YAML_NAME = "openai.yaml"
 _GEMINI_EXTENSION_NAME = "deeprefine-skill"
+_OPENCODE_COMMANDS_DIR = "commands"
 
 # ---------------------------------------------------------------------------
 # Source-file resolution
@@ -419,3 +421,103 @@ def uninstall_gemini_extension(
         return True
     # Also clean up the old manual-copy fallback if present.
     return remove_copied_gemini_extension(target_dir)
+
+
+# ---------------------------------------------------------------------------
+# OpenCode
+# ---------------------------------------------------------------------------
+
+
+def _opencode_skill_source() -> Path:
+    """Return the path to the OpenCode SKILL_OPENCODE.md source."""
+    return _resolve_skill_source(_SKILL_OPENCODE_MD_NAME)
+
+
+def _opencode_commands_source_dir() -> Path:
+    """Return the directory containing OpenCode command .md files."""
+    bundled = Path(__file__).resolve().parent / _OPENCODE_COMMANDS_DIR / "opencode"
+    if bundled.is_dir() and list(bundled.glob("*.md")):
+        return bundled
+    repo_root = Path(__file__).resolve().parents[1]
+    fallback = repo_root / "deeprefine_skill" / _OPENCODE_COMMANDS_DIR / "opencode"
+    if fallback.is_dir() and list(fallback.glob("*.md")):
+        return fallback
+    raise FileNotFoundError(
+        "Missing OpenCode command templates (expected under "
+        "deeprefine_skill/commands/opencode/)."
+    )
+
+
+def install_opencode_skill(*, project: bool) -> Path:
+    """Install the OpenCode skill and commands.
+
+    Copies:
+    - ``SKILL_OPENCODE.md`` → ``.opencode/skills/deeprefine/SKILL.md``
+    - ``commands/opencode/*.md`` → ``.opencode/commands/*.md``
+
+    Parameters
+    ----------
+    project : bool
+        If *True*, install under the current working directory
+        (``.opencode/skills/deeprefine/``).  If *False*, install under
+        ``~/.opencode/skills/deeprefine/`` (user-wide).
+
+    Returns
+    -------
+    Path
+        Destination path of the installed ``SKILL.md``.
+    """
+    src_skill = _opencode_skill_source()
+    src_commands = _opencode_commands_source_dir()
+    if project:
+        dest_skill_dir = Path.cwd() / ".opencode" / "skills" / "deeprefine"
+        dest_cmd_dir = Path.cwd() / ".opencode" / "commands"
+    else:
+        dest_skill_dir = Path.home() / ".claude" / "skills" / "deeprefine"
+        dest_cmd_dir = Path.home() / ".opencode" / "commands"
+    dest_skill_dir.mkdir(parents=True, exist_ok=True)
+    dest_cmd_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_skill, dest_skill_dir / _SKILL_MD_NAME)
+    for cmd in src_commands.glob("*.md"):
+        shutil.copy2(cmd, dest_cmd_dir / cmd.name)
+    return dest_skill_dir / _SKILL_MD_NAME
+
+
+def uninstall_opencode_skill(*, project: bool) -> bool:
+    """Remove a previously installed OpenCode skill and commands.
+
+    Returns
+    -------
+    bool
+        *True* if any file was removed, *False* if nothing was installed.
+    """
+    if project:
+        dest_skill = Path.cwd() / ".opencode" / "skills" / "deeprefine" / _SKILL_MD_NAME
+        dest_cmd_dir = Path.cwd() / ".opencode" / "commands"
+    else:
+        dest_skill = Path.home() / ".opencode" / "skills" / "deeprefine" / _SKILL_MD_NAME
+        dest_cmd_dir = Path.home() / ".opencode" / "commands"
+    removed = False
+    if dest_skill.is_file():
+        dest_skill.unlink()
+        removed = True
+    for cmd in dest_cmd_dir.glob("deeprefine*.md"):
+        cmd.unlink()
+        removed = True
+    # Clean skill-tree parents: deeprefine/, skills/, .opencode/
+    for parent in [dest_skill.parent, dest_skill.parent.parent, dest_skill.parent.parent.parent]:
+        try:
+            parent.rmdir()
+        except OSError:
+            pass
+    # Clean commands/ if empty (only rmdir — never remove if other files exist)
+    try:
+        dest_cmd_dir.rmdir()
+    except OSError:
+        pass
+    # Clean .opencode/ itself (may still fail if commands/ was non-empty)
+    try:
+        dest_skill.parent.parent.parent.rmdir()
+    except OSError:
+        pass
+    return removed

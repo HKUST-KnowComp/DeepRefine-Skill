@@ -1,9 +1,10 @@
 """DeepRefine CLI — command-line entry point for the DeepRefine agent skill.
 
 Provides subcommands for platform-specific skill installation (Cursor,
-Copilot CLI, Gemini CLI), query-history management, FAISS index
-rebuilding, dry-run refinement review, graph refinement, loop-trace
-lifecycle management, and applying refinement actions to ``graph.json``.
+Copilot CLI, Gemini CLI, Codex, OpenCode), query-history management,
+FAISS index rebuilding, dry-run refinement review, graph refinement,
+loop-trace lifecycle management, and applying refinement actions to
+``graph.json``.
 """
 
 from __future__ import annotations
@@ -27,11 +28,13 @@ from deeprefine_skill.installers import (
     install_copilot_skill,
     install_cursor_skill,
     install_gemini_extension,
+    install_opencode_skill,
     link_gemini_extension,
     uninstall_codex_skill,
     uninstall_copilot_skill,
     uninstall_cursor_skill,
     uninstall_gemini_extension,
+    uninstall_opencode_skill,
 )
 from deeprefine_skill.paths import (
     env_defaults,
@@ -124,6 +127,38 @@ def cmd_codex_uninstall(args: argparse.Namespace) -> int:
     if removed:
         scope = "project" if args.project else "user"
         print(f"Removed DeepRefine Codex skill ({scope}).")
+    else:
+        print("Skill not installed at the selected scope.")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# OpenCode handlers
+# ---------------------------------------------------------------------------
+
+
+def cmd_opencode_install(args: argparse.Namespace) -> int:
+    """``deeprefine opencode install`` - install skill + commands for OpenCode."""
+    dest = install_opencode_skill(project=args.project)
+    scope = "project" if args.project else "user"
+    print(f"Installed DeepRefine OpenCode skill ({scope}) -> {dest}")
+    cwd_root = Path.cwd() if args.project else Path.home()
+    cmd_dir = cwd_root / ".opencode" / "commands"
+    cmds = list(cmd_dir.glob("deeprefine*.md"))
+    print(f"Installed {len(cmds)} command(s) → {cmd_dir}")
+    for cmd in sorted(cmds):
+        print(f"  /{cmd.stem}")
+    if args.project:
+        print("Restart or reload OpenCode, then invoke /deeprefine.")
+    return 0
+
+
+def cmd_opencode_uninstall(args: argparse.Namespace) -> int:
+    """``deeprefine opencode uninstall`` - remove the OpenCode skill + commands."""
+    removed = uninstall_opencode_skill(project=args.project)
+    if removed:
+        scope = "project" if args.project else "user"
+        print(f"Removed DeepRefine OpenCode skill and commands ({scope}).")
     else:
         print("Skill not installed at the selected scope.")
     return 0
@@ -641,6 +676,36 @@ def main(argv: list[str] | None = None) -> int:
         user_help="Remove from ~/.codex/skills/deeprefine (all projects)",
     )
     p_codu.set_defaults(func=cmd_codex_uninstall, _default_project=True)
+
+    # deeprefine opencode install | uninstall
+    p_opencode = sub.add_parser("opencode", help="OpenCode IDE integration")
+    opencode_sub = p_opencode.add_subparsers(dest="opencode_cmd", required=True)
+
+    p_opi = opencode_sub.add_parser(
+        "install", help="Install /deeprefine skill for OpenCode"
+    )
+    _add_project_flag(
+        p_opi,
+        project_help=(
+            "Install to .opencode/skills/deeprefine in the current directory "
+            "(default for opencode install)"
+        ),
+        user_help="Install to ~/.opencode/skills/deeprefine (all projects)",
+    )
+    p_opi.set_defaults(func=cmd_opencode_install, _default_project=True)
+
+    p_opu = opencode_sub.add_parser(
+        "uninstall", help="Remove OpenCode skill and commands"
+    )
+    _add_project_flag(
+        p_opu,
+        project_help=(
+            "Remove from .opencode/skills/deeprefine and .opencode/commands "
+            "in the current directory (default for opencode uninstall)"
+        ),
+        user_help="Remove from ~/.opencode/skills/deeprefine (all projects)",
+    )
+    p_opu.set_defaults(func=cmd_opencode_uninstall, _default_project=True)
 
     # deeprefine gemini link | install | uninstall | path
     p_gemini = sub.add_parser("gemini", help="Gemini CLI integration")
