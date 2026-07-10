@@ -18,14 +18,14 @@
 </tr>
 </table>
 
-[![PyPi](https://img.shields.io/badge/PyPi-v0.1.9-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.9/)
-[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.1.9/)
+[![PyPi](https://img.shields.io/badge/PyPi-v0.2.0-blue.svg)](https://pypi.org/project/deeprefine-cli/0.2.0/)
+[![Python](https://img.shields.io/badge/Python-3.10,3.11,3.12-blue.svg)](https://pypi.org/project/deeprefine-cli/0.2.0/)
 [![Paper](https://img.shields.io/badge/Paper-DeepRefine-b31b1b.svg)](https://arxiv.org/pdf/2605.10488)
 [![Project](https://img.shields.io/badge/Project-DeepRefine-green.svg)](https://github.com/HKUST-KnowComp/DeepRefine)
 
 </div>
 
-DeepRefine-Skill plugs into agent workflows and use a single command `/deeprefine` in your agent (Cursor, Copilot CLI, Gemini CLI, Codex, OpenCode) to refine and evolve your LLM-Wiki (e.g., **[graphify](https://github.com/safishamsi/graphify)**) knowledge base.
+DeepRefine-Skill plugs into agent workflows and use a single command `/deeprefine` in your agent (Cursor, Copilot CLI, Gemini CLI, Codex, OpenCode, Claude Code) to refine and evolve your LLM-Wiki (e.g., **[graphify](https://github.com/safishamsi/graphify)**) knowledge base.
 
 <p align="center">
 <img src="assets/demo-typing-deeprefine.svg" alt="Demo: /deeprefine" />
@@ -47,7 +47,7 @@ Supported agent frameworks:
 ---
 
 ## News
-- **[2026/7/9] v0.1.9** -  Claude Code and OpenCode supported.
+- **[2026/7/10] v0.2.0** - Claude Code and OpenCode adapters: `deeprefine claude install` / `deeprefine opencode install`, bundled skill + command templates.
 - **[2026/7/3] v0.1.9** -  Release with Codex, Copilot CLI, and Gemini CLI skills bundled; dry-run-first refinement, evidence-aware action review (HIGH/MEDIUM/LOW), ambiguous-node warnings, and LOW-confidence apply guard.
 - **[2026/6/24] v0.1.9** - Codex skill supported.
 - **[2026/6/18] v0.1.9** - Gemini CLI and Copilot CLI supported.
@@ -77,6 +77,8 @@ deeprefine gemini install # or deeprefine gemini link
 deeprefine codex install
 # for Claude Code
 deeprefine claude install
+# for OpenCode
+deeprefine opencode install
 ```
 
 After upgrading the package, run the command again to refresh local skill files.
@@ -144,6 +146,9 @@ Run from your KB project root.
 | `deeprefine claude install` | Install `/deeprefine` skill for Claude Code (`.claude/skills/deeprefine/`) |
 | `deeprefine claude install --user` | Install Claude Code skill for all projects (`~/.claude/skills/deeprefine/`) |
 | `deeprefine claude uninstall` | Remove the Claude Code skill |
+| `deeprefine opencode install` | Install `/deeprefine` skill + commands for OpenCode (`.opencode/`) |
+| `deeprefine opencode install --user` | Install OpenCode skill for all projects (`~/.opencode/`) |
+| `deeprefine opencode uninstall` | Remove the OpenCode skill and commands |
 | `deeprefine gemini path` | Print the extension root used for Gemini CLI |
 | `deeprefine gemini link` | Link the current source checkout with `gemini extensions link` |
 | `deeprefine gemini install` | Install the bundled extension with `gemini extensions install` |
@@ -551,7 +556,7 @@ deeprefine refine          # dry-run by default
 
 | Method | Command |
 |--------|---------|
-| **PyPI** | `pip install deeprefine-cli==0.1.9` |
+| **PyPI** | `pip install deeprefine-cli==0.2.0` |
 | **Source** | `pip install -e /path/to/DeepRefine-Skill` |
 
 ```bash

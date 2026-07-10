@@ -566,7 +566,7 @@ def install_opencode_skill(*, project: bool) -> Path:
         dest_skill_dir = Path.cwd() / ".opencode" / "skills" / "deeprefine"
         dest_cmd_dir = Path.cwd() / ".opencode" / "commands"
     else:
-        dest_skill_dir = Path.home() / ".claude" / "skills" / "deeprefine"
+        dest_skill_dir = Path.home() / ".opencode" / "skills" / "deeprefine"
         dest_cmd_dir = Path.home() / ".opencode" / "commands"
     dest_skill_dir.mkdir(parents=True, exist_ok=True)
     dest_cmd_dir.mkdir(parents=True, exist_ok=True)
