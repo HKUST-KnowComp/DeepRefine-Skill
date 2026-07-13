@@ -23,7 +23,7 @@ Then ask the user for explicit approval.
 Only if the user's **next message** explicitly says to approve/apply/write the graph may you run:
 
 ```bash
-deeprefine apply --trace-file ... --refinement-file ...
+deeprefine apply --refresh-wiki --trace-file ... --refinement-file ...
 deeprefine loop finish --trace-file ... --refinement-file ...
 ```
 
@@ -179,10 +179,10 @@ for question in target_queries:
 
         # Follow-up turn only, after the user's next message explicitly approves/apply/write:
         if user explicitly approves and no LOW-confidence action remains:
-            deeprefine apply --trace-file ... --refinement-file ...
+            deeprefine apply --refresh-wiki --trace-file ... --refinement-file ...
             deeprefine loop finish --trace-file ... --refinement-file ...
         if user explicitly accepts LOW-confidence risk in that approval message:
-            deeprefine apply --allow-low-confidence --trace-file ... --refinement-file ...
+            deeprefine apply --refresh-wiki --allow-low-confidence --trace-file ... --refinement-file ...
             deeprefine loop finish --trace-file ... --refinement-file ...
 ```
 
@@ -351,9 +351,9 @@ deeprefine review --trace-file ... --refinement-file graphify-out/.deeprefine/re
 # Do NOT run deeprefine apply in the same /deeprefine turn.
 
 # Approval-only follow-up commands, only after the user explicitly says approve/apply:
-deeprefine apply --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+deeprefine apply --refresh-wiki --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 # Optional explicit risk override:
-# deeprefine apply --allow-low-confidence --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
+# deeprefine apply --refresh-wiki --allow-low-confidence --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 deeprefine loop finish --trace-file ... --refinement-file graphify-out/.deeprefine/refinement_actions_<id>.txt
 
 # 9. Repeat step 3..8 until all pending queries are reviewed/finished.

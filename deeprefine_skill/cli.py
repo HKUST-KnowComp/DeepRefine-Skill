@@ -397,10 +397,41 @@ def cmd_apply(args: argparse.Namespace) -> int:
         import shutil
 
         shutil.copy2(paths["graph_json"], backup)
-    changes = __import__(
-        "deeprefine_skill.agent_graph", fromlist=["apply_refinement_text"]
-    ).apply_refinement_text(paths["graph_json"], text)
-    print(f"Applied {len(changes)} action(s) to {paths['graph_json']}")
+    if getattr(args, "refresh_wiki", False):
+        from deeprefine_skill.wiki_refresh import (
+            WikiRefreshError,
+            apply_refinement_with_wiki_refresh,
+        )
+
+        try:
+            result = apply_refinement_with_wiki_refresh(
+                graph_path=paths["graph_json"],
+                refinement_text=text,
+                project_root=project,
+            )
+        except WikiRefreshError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        except Exception as exc:
+            print(
+                "Failed to commit graph.json and Wiki together; the transaction "
+                f"was rolled back where possible: {exc}",
+                file=sys.stderr,
+            )
+            return 1
+        changes = result.changes
+        if result.stdout.strip():
+            print(result.stdout.strip())
+        print(
+            f"Applied {len(changes)} action(s) to {paths['graph_json']} "
+            f"and refreshed {result.wiki_dir}"
+        )
+    else:
+        changes = __import__(
+            "deeprefine_skill.agent_graph", fromlist=["apply_refinement_text"]
+        ).apply_refinement_text(paths["graph_json"], text)
+        print(f"Applied {len(changes)} action(s) to {paths['graph_json']}")
+
     for c in changes:
         print(f"  - {c}")
     return 0
@@ -912,6 +943,14 @@ def main(argv: list[str] | None = None) -> int:
         "--allow-low-confidence",
         action="store_true",
         help="Apply even when the review contains LOW-confidence actions.",
+    )
+    p_apply.add_argument(
+        "--refresh-wiki",
+        action="store_true",
+        help=(
+            "Regenerate graphify-out/wiki from the refined graph and commit the "
+            "graph + Wiki together; leave both unchanged if refresh fails."
+        ),
     )
     p_apply.add_argument("--project-root", default=None)
     p_apply.set_defaults(func=cmd_apply)

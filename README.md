@@ -107,7 +107,7 @@ When you run `/deeprefine`, it should follow this order:
 3. refine pending queries sequentially
 4. for refinement-path queries, generate `<refinement>` actions and run `deeprefine review`
 5. stop in dry-run mode and show the review report; do **not** modify `graph.json` yet
-6. only after user approval, run `deeprefine apply` and then `deeprefine loop finish`
+6. only after user approval, run `deeprefine apply --refresh-wiki` and then `deeprefine loop finish`
 
 </details>
 
@@ -159,8 +159,8 @@ Run from your KB project root.
 | `deeprefine loop init --query "..."` | Create `loop_trace_<id>.json` template |
 | `deeprefine loop validate --trace-file T` | Validate trace against Reafiner control flow |
 | `deeprefine review --trace-file T --refinement-file F` | Review proposed actions with HIGH/MEDIUM/LOW evidence labels; no graph write |
-| `deeprefine apply --trace-file T --refinement-file F` | Apply `<refinement>` actions to `graph.json` after approval; refuses LOW by default |
-| `deeprefine apply --allow-low-confidence --trace-file T --refinement-file F` | Override LOW-confidence guard explicitly |
+| `deeprefine apply --refresh-wiki --trace-file T --refinement-file F` | Apply actions and regenerate `graphify-out/wiki` from the refined graph; graph + Wiki are committed together |
+| `deeprefine apply --refresh-wiki --allow-low-confidence --trace-file T --refinement-file F` | Refresh the Wiki while explicitly overriding the LOW-confidence guard |
 | `deeprefine loop finish --trace-file T [--refinement-file F]` | Persist results and mark history refined |
 
 ### Evidence-aware review and safe apply
@@ -181,6 +181,8 @@ GOOD: insert_edge("pretraining/pretraining_CLIP_fine-grained.py::main()", "calls
 ```
 
 `deeprefine apply` refuses LOW-confidence actions by default. Use `--allow-low-confidence` only when the user explicitly accepts the risk.
+
+When the knowledge base was created with Graphify Wiki output, use `--refresh-wiki`. DeepRefine stages the refined graph, regenerates the Wiki with `graphify export wiki`, validates `wiki/index.md`, and only then replaces the production graph and Wiki. If export fails, the existing graph and Wiki remain unchanged.
 
 ---
 

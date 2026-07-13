@@ -330,7 +330,7 @@ def render_review_markdown(reviews: list[ActionReview]) -> str:
             lines.append("Suggested replacement:")
             lines.append(f"- {review.suggested_replacement}")
         lines.append("")
-    lines.append("Apply only after review: deeprefine apply --trace-file <trace> --refinement-file <actions>")
+    lines.append("Apply only after review: deeprefine apply --refresh-wiki --trace-file <trace> --refinement-file <actions>")
     return "\n".join(lines).rstrip() + "\n"
 
 

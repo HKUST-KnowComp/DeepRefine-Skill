@@ -17,7 +17,7 @@ Requirements:
 2. Require a valid `loop_trace_<query_id>.json` and a refinement action file containing `<refinement>...</refinement>`.
 3. Validate before applying by running `deeprefine loop validate --trace-file <trace> --refinement-file <file>`.
 4. Review before applying by running `deeprefine review --trace-file <trace> --refinement-file <file>` when possible.
-5. Apply only through `deeprefine apply --trace-file <trace> --refinement-file <file>`.
+5. Apply only through `deeprefine apply --refresh-wiki --trace-file <trace> --refinement-file <file>`.
 6. Do not hand-edit `graphify-out/graph.json`.
 7. After applying, finish with `deeprefine loop finish --trace-file <trace> --refinement-file <file>`.
 8. Report every modified artifact and summarize the applied refinement actions.
