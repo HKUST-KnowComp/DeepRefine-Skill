@@ -10,6 +10,7 @@ from .agent_graph import _parse_action_string, parse_refinement_block
 
 
 AMBIGUOUS_LABELS = {
+    # Code-specific
     "main",
     "main()",
     "run",
@@ -20,6 +21,17 @@ AMBIGUOUS_LABELS = {
     "test()",
     "setup",
     "setup()",
+    # Wiki-specific — common page names that are ambiguous
+    # without a qualified path or context.
+    "untitled",
+    "new_page",
+    "draft",
+    "index",
+    "home",
+    "introduction",
+    "overview",
+    "notes",
+    "todo",
 }
 
 
@@ -183,6 +195,38 @@ def _has_code_evidence(path: Path, subject: str, relation: str, obj: str) -> boo
     return False
 
 
+def _has_wiki_evidence(md_path: Path, obj: str) -> bool:
+    """Check if ``[[obj]]`` (with Obsidian variants) exists in a markdown file.
+
+    Matches:
+      - ``[[Page]]``
+      - ``[[Page|display text]]``
+      - ``[[Page#heading]]``
+      - ``[[Page#heading|display text]]``
+
+    Used by ``review_action()`` to confirm that a ``delete_edge`` target
+    actually appears as a wikilink in the source page.
+    """
+    if not md_path.exists():
+        return False
+
+    try:
+        text = md_path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return False
+
+    obj_token = obj.strip()
+    if not obj_token:
+        return False
+
+    pattern = re.compile(
+        r"\[\["
+        + re.escape(obj_token)
+        + r"(?:\|[^\]]*)?(?:\#[^\]]*)?\]\]"
+    )
+    return bool(pattern.search(text))
+
+
 def _format_node(node: dict[str, Any]) -> str:
     src = _node_source(node)
     label = _label(node)
@@ -269,10 +313,24 @@ def review_action(raw: dict[str, Any], action: str, *, project_root: Path | None
         elif sub_matches and obj_matches:
             evidence.append("Both endpoint nodes exist in graph.json; relation is inferred by refinement loop.")
         if project_root and sub_matches:
-            for path in _source_files_for(sub_matches, project_root):
-                if _has_code_evidence(path, args[0], args[1], args[2]):
-                    evidence.append(f"Direct code evidence in {_display_path(path, project_root)}.")
-                    break
+            source_files = _source_files_for(sub_matches, project_root)
+            if source_files:
+                for path in source_files:
+                    if _has_code_evidence(path, args[0], args[1], args[2]):
+                        evidence.append(f"Direct code evidence in {_display_path(path, project_root)}.")
+                        break
+            else:
+                # Wiki evidence — nodes use page_path instead of source_file.
+                # For delete_edge: confirm [[obj]] exists in the subject's .md file.
+                if fn == "delete_edge":
+                    for n in sub_matches:
+                        page_path_str = n.get("page_path")
+                        if page_path_str and _has_wiki_evidence(Path(page_path_str), args[2]):
+                            evidence.append(
+                                f"Direct wiki evidence: [[{args[2]}]] found in "
+                                f"{_display_path(Path(page_path_str), project_root)}."
+                            )
+                            break
 
     if fn == "replace_node" and len(args) >= 2:
         old_matches = _matching_nodes(nodes, args[0])
@@ -289,6 +347,7 @@ def review_action(raw: dict[str, Any], action: str, *, project_root: Path | None
         "Exact edge already exists" in e
         or "Replacement source node" in e
         or "Direct code evidence" in e
+        or "Direct wiki evidence" in e
         for e in evidence
     ):
         confidence = "HIGH"
