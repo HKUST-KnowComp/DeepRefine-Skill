@@ -97,6 +97,27 @@ def reafiner_needs_refinement(interaction_history: list[dict[str, Any]]) -> bool
     return len(interaction_history) > 1
 
 
+#: Valid retrieval methods for step 1 (initial hop).
+#: Extended for LLM-Wiki: wiki_search / wiki_search+k_hop_expansion.
+VALID_RETRIEVAL_METHODS_STEP1 = (
+    "graphify_query",
+    "graphify_query+graph_read",
+    "wiki_search",                   # wiki full-text search
+    "wiki_search+k_hop_expansion",   # wiki search + BFS
+)
+
+#: Valid retrieval methods for hop 2+ (expansion hops).
+#: Extended for LLM-Wiki: wiki variants + link_traversal.
+VALID_RETRIEVAL_METHODS_HOP2 = (
+    "k_hop_expansion",
+    "graphify_query",
+    "graphify_query+k_hop_expansion",
+    "wiki_search",                   # wiki full-text search
+    "wiki_search+k_hop_expansion",   # wiki search + BFS
+    "link_traversal",                # wiki pure BFS link traversal
+)
+
+
 def validate_trace(trace: dict[str, Any], *, refinement_text: str | None = None) -> list[str]:
     """
     Return human-readable errors. Empty list means the trace matches DeepRefine control flow.
@@ -165,16 +186,16 @@ def validate_trace(trace: dict[str, Any], *, refinement_text: str | None = None)
             )
 
         if step_no == 1:
-            if retrieval.get("method") not in ("graphify_query", "graphify_query+graph_read"):
-                errors.append('step 1: retrieval.method must be "graphify_query" (run graphify query)')
-        elif step_no > 1:
-            if retrieval.get("method") not in (
-                "k_hop_expansion",
-                "graphify_query",
-                "graphify_query+k_hop_expansion",
-            ):
+            if retrieval.get("method") not in VALID_RETRIEVAL_METHODS_STEP1:
                 errors.append(
-                    f"step {step_no}: hop 2+ needs k_hop_expansion or graphify_query on prior entities"
+                    f"step {step_no}: retrieval.method must be one of "
+                    f"{VALID_RETRIEVAL_METHODS_STEP1}"
+                )
+        elif step_no > 1:
+            if retrieval.get("method") not in VALID_RETRIEVAL_METHODS_HOP2:
+                errors.append(
+                    f"step {step_no}: retrieval.method must be one of "
+                    f"{VALID_RETRIEVAL_METHODS_HOP2}"
                 )
 
     last = ih[-1]
