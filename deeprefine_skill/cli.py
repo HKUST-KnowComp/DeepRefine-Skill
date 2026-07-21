@@ -426,6 +426,22 @@ def cmd_apply(args: argparse.Namespace) -> int:
             f"Applied {len(changes)} action(s) to {paths['graph_json']} "
             f"and refreshed {result.wiki_dir}"
         )
+    elif getattr(args, "update_wiki", False):
+        from deeprefine_skill.wiki_update import (
+            WikiUpdateError,
+            apply_refinement_with_wiki_update,
+        )
+
+        try:
+            result = apply_refinement_with_wiki_update(
+                graph_path=paths["graph_json"],
+                refinement_text=text,
+            )
+        except WikiUpdateError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        changes = result.changes
+        print(f"Updated {len(result.updated_files)} wiki file(s)")
     else:
         changes = __import__(
             "deeprefine_skill.agent_graph", fromlist=["apply_refinement_text"]
@@ -950,6 +966,15 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "Regenerate graphify-out/wiki from the refined graph and commit the "
             "graph + Wiki together; leave both unchanged if refresh fails."
+        ),
+    )
+    p_apply.add_argument(
+        "--update-wiki",
+        action="store_true",
+        help=(
+            "Apply refinement actions as incremental edits to wiki .md files. "
+            "Supports both [[wikilinks]] and [text](url) markdown links — uses "
+            "the same link convention as the original file."
         ),
     )
     p_apply.add_argument("--project-root", default=None)
