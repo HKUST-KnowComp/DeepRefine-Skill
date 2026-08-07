@@ -1,0 +1,218 @@
+{
+  "cases": [
+    {
+      "directed": true,
+      "gold_edges": [
+        {"relation": "studied at", "source": "d1e1", "target": "d1e2"},
+        {"relation": "located in", "source": "d1e2", "target": "d1e3"},
+        {"relation": "capital of", "source": "d1e3", "target": "d1e4"},
+        {"relation": "founded in", "source": "d1e2", "target": "d1e5"},
+        {"relation": "citizen of", "source": "d1e1", "target": "d1e4"},
+        {"relation": "contains", "source": "d1e4", "target": "d1e3"},
+        {"relation": "born in", "source": "d1e1", "target": "d1e3"},
+        {"relation": "enrolls", "source": "d1e2", "target": "d1e1"}
+      ],
+      "gold_entities": [
+        {"aliases": ["M. Chen"], "id": "d1e1", "label": "Mira Chen", "source_file": "doc-alpha.txt"},
+        {"aliases": ["Aurora"], "id": "d1e2", "label": "Aurora University", "source_file": "doc-alpha.txt"},
+        {"id": "d1e3", "label": "Aster City", "source_file": "doc-alpha.txt"},
+        {"aliases": ["Borealis"], "id": "d1e4", "label": "Borealis Republic", "source_file": "doc-alpha.txt"},
+        {"id": "d1e5", "label": "1998", "source_file": "doc-alpha.txt"}
+      ],
+      "id": "doc-alpha",
+      "source_files": ["doc-alpha.txt"],
+      "task": "intrinsic",
+      "title": "Aurora University"
+    },
+    {
+      "directed": true,
+      "gold_edges": [
+        {"relation": "founded", "source": "d2e1", "target": "d2e2"},
+        {"relation": "created", "source": "d2e2", "target": "d2e3"},
+        {"accepted_relations": ["headquartered at"], "relation": "headquartered in", "source": "d2e2", "target": "d2e4"},
+        {"relation": "released in", "source": "d2e3", "target": "d2e5"},
+        {"relation": "lives in", "source": "d2e1", "target": "d2e4"},
+        {"relation": "hosts", "source": "d2e4", "target": "d2e2"},
+        {"relation": "developed by", "source": "d2e3", "target": "d2e2"},
+        {"relation": "created", "source": "d2e1", "target": "d2e3"}
+      ],
+      "gold_entities": [
+        {"id": "d2e1", "label": "Leo Hart", "source_file": "doc-beta.txt"},
+        {"aliases": ["Quill"], "id": "d2e2", "label": "Quill Labs", "source_file": "doc-beta.txt"},
+        {"aliases": ["Orion"], "id": "d2e3", "label": "Orion Database", "source_file": "doc-beta.txt"},
+        {"id": "d2e4", "label": "Cedar City", "source_file": "doc-beta.txt"},
+        {"id": "d2e5", "label": "2012", "source_file": "doc-beta.txt"}
+      ],
+      "id": "doc-beta",
+      "source_files": ["doc-beta.txt"],
+      "task": "intrinsic",
+      "title": "Quill Labs"
+    },
+    {
+      "directed": true,
+      "gold_edges": [
+        {"relation": "works at", "source": "d3e1", "target": "d3e2"},
+        {"relation": "discovered", "source": "d3e2", "target": "d3e3"},
+        {"relation": "located in", "source": "d3e2", "target": "d3e4"},
+        {"relation": "discovered in", "source": "d3e3", "target": "d3e5"},
+        {"relation": "observed", "source": "d3e1", "target": "d3e3"},
+        {"relation": "contains", "source": "d3e4", "target": "d3e2"},
+        {"relation": "observed by", "source": "d3e3", "target": "d3e1"},
+        {"relation": "lives in", "source": "d3e1", "target": "d3e4"}
+      ],
+      "gold_entities": [
+        {"id": "d3e1", "label": "Nia Vale", "source_file": "doc-gamma.txt"},
+        {"aliases": ["Silver"], "id": "d3e2", "label": "Silver Observatory", "source_file": "doc-gamma.txt"},
+        {"aliases": ["Helios"], "id": "d3e3", "label": "Helios Comet", "source_file": "doc-gamma.txt"},
+        {"id": "d3e4", "label": "Ridge Province", "source_file": "doc-gamma.txt"},
+        {"id": "d3e5", "label": "2004", "source_file": "doc-gamma.txt"}
+      ],
+      "id": "doc-gamma",
+      "source_files": ["doc-gamma.txt"],
+      "task": "intrinsic",
+      "title": "Silver Observatory"
+    },
+    {
+      "directed": true,
+      "gold_edges": [
+        {"relation": "wrote", "source": "d4e1", "target": "d4e3"},
+        {"relation": "published", "source": "d4e2", "target": "d4e3"},
+        {"relation": "located in", "source": "d4e2", "target": "d4e4"},
+        {"relation": "published in", "source": "d4e3", "target": "d4e5"},
+        {"relation": "lives in", "source": "d4e1", "target": "d4e4"},
+        {"relation": "hosts", "source": "d4e4", "target": "d4e2"},
+        {"relation": "author", "source": "d4e3", "target": "d4e1"},
+        {"relation": "works with", "source": "d4e1", "target": "d4e2"}
+      ],
+      "gold_entities": [
+        {"id": "d4e1", "label": "Oren Pike", "source_file": "doc-delta.txt"},
+        {"aliases": ["Bluebird"], "id": "d4e2", "label": "Bluebird Press", "source_file": "doc-delta.txt"},
+        {"aliases": ["Ember"], "id": "d4e3", "label": "Ember Novel", "source_file": "doc-delta.txt"},
+        {"id": "d4e4", "label": "Lumen Town", "source_file": "doc-delta.txt"},
+        {"id": "d4e5", "label": "2018", "source_file": "doc-delta.txt"}
+      ],
+      "id": "doc-delta",
+      "source_files": ["doc-delta.txt"],
+      "task": "intrinsic",
+      "title": "Bluebird Press"
+    },
+    {
+      "answer_entities": ["Aurora University"],
+      "answers": ["Aurora University"],
+      "evidence_edges": [
+        {"relation": "studied at", "source": "Mira Chen", "target": "Aurora University"}
+      ],
+      "id": "qa-01",
+      "max_hops": 1,
+      "question": "Where did Mira Chen study?",
+      "seed_entities": ["Mira Chen"],
+      "supporting_facts": ["doc-alpha#0"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Borealis Republic", "Borealis"],
+      "answers": ["Borealis Republic"],
+      "evidence_edges": [
+        {"relation": "studied at", "source": "Mira Chen", "target": "Aurora University"},
+        {"relation": "located in", "source": "Aurora University", "target": "Aster City"},
+        {"relation": "capital of", "source": "Aster City", "target": "Borealis Republic"}
+      ],
+      "id": "qa-02",
+      "max_hops": 3,
+      "question": "Which country contains the university where Mira studied?",
+      "seed_entities": ["Mira Chen"],
+      "supporting_facts": ["doc-alpha#0", "doc-alpha#1", "doc-alpha#2"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Orion Database", "Orion"],
+      "answers": ["Orion Database"],
+      "evidence_edges": [
+        {"relation": "founded", "source": "Leo Hart", "target": "Quill Labs"},
+        {"relation": "created", "source": "Quill Labs", "target": "Orion Database"}
+      ],
+      "id": "qa-03",
+      "max_hops": 2,
+      "question": "What database was created by the company Leo founded?",
+      "seed_entities": ["Leo Hart"],
+      "supporting_facts": ["doc-beta#0", "doc-beta#1"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["2012"],
+      "answers": ["2012"],
+      "evidence_edges": [
+        {"relation": "released in", "source": "Orion Database", "target": "2012"}
+      ],
+      "id": "qa-04",
+      "max_hops": 1,
+      "question": "When was Orion Database released?",
+      "seed_entities": ["Orion Database"],
+      "supporting_facts": ["doc-beta#2"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Helios Comet", "Helios"],
+      "answers": ["Helios Comet"],
+      "evidence_edges": [
+        {"relation": "works at", "source": "Nia Vale", "target": "Silver Observatory"},
+        {"relation": "discovered", "source": "Silver Observatory", "target": "Helios Comet"}
+      ],
+      "id": "qa-05",
+      "max_hops": 2,
+      "question": "What comet was discovered by Nia's observatory?",
+      "seed_entities": ["Nia Vale"],
+      "supporting_facts": ["doc-gamma#0", "doc-gamma#1"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Ridge Province"],
+      "answers": ["Ridge Province"],
+      "evidence_edges": [
+        {"relation": "located in", "source": "Silver Observatory", "target": "Ridge Province"}
+      ],
+      "id": "qa-06",
+      "max_hops": 1,
+      "question": "Where is Silver Observatory located?",
+      "seed_entities": ["Silver Observatory"],
+      "supporting_facts": ["doc-gamma#2"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Ember Novel", "Ember"],
+      "answers": ["Ember Novel"],
+      "evidence_edges": [
+        {"relation": "wrote", "source": "Oren Pike", "target": "Ember Novel"}
+      ],
+      "id": "qa-07",
+      "max_hops": 1,
+      "question": "What novel did Oren Pike write?",
+      "seed_entities": ["Oren Pike"],
+      "supporting_facts": ["doc-delta#0"],
+      "task": "downstream"
+    },
+    {
+      "answer_entities": ["Lumen Town"],
+      "answers": ["Lumen Town"],
+      "evidence_edges": [
+        {"relation": "works with", "source": "Oren Pike", "target": "Bluebird Press"},
+        {"relation": "located in", "source": "Bluebird Press", "target": "Lumen Town"}
+      ],
+      "id": "qa-08",
+      "max_hops": 2,
+      "question": "Where is the publisher that works with Oren located?",
+      "seed_entities": ["Oren Pike"],
+      "supporting_facts": ["doc-delta#0", "doc-delta#1"],
+      "task": "downstream"
+    }
+  ],
+  "profile": "smoke",
+  "schema_version": 1,
+  "source": {
+    "dataset": "Self-authored synthetic fixture",
+    "license": "MIT",
+    "provenance": "DeepRefine-Skill test data; not a performance claim"
+  },
+  "suite_id": "synthetic-smoke-v1",
+  "suite_version": "1"
+}

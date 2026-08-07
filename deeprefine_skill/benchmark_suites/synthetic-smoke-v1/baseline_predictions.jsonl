@@ -1,0 +1,8 @@
+{"answer":"Borealis Republic","case_id":"qa-01","retrieved_nodes":["Borealis Republic","Aster City"],"retrieved_supporting_facts":[]}
+{"answer":"Aster City","case_id":"qa-02","retrieved_nodes":["Aster City","Borealis Republic"],"retrieved_supporting_facts":["doc-alpha#1"]}
+{"answer":"Quill Labs","case_id":"qa-03","retrieved_nodes":["Quill Labs","Cedar City"],"retrieved_supporting_facts":["doc-beta#0"]}
+{"answer":"2011","case_id":"qa-04","retrieved_nodes":["Cedar City","2012"],"retrieved_supporting_facts":[]}
+{"answer":"Silver Observatory","case_id":"qa-05","retrieved_nodes":["Silver Observatory","Ridge Province"],"retrieved_supporting_facts":["doc-gamma#0"]}
+{"answer":"Ridge Province","case_id":"qa-06","retrieved_nodes":["Ridge Province"],"retrieved_supporting_facts":["doc-gamma#2"]}
+{"answer":"Ember Novel","case_id":"qa-07","retrieved_nodes":["Ember Novel"],"retrieved_supporting_facts":["doc-delta#0"]}
+{"answer":"Bluebird Press","case_id":"qa-08","retrieved_nodes":["Bluebird Press","Lumen Town"],"retrieved_supporting_facts":["doc-delta#0"]}

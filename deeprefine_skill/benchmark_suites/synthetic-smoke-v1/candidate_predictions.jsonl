@@ -1,0 +1,8 @@
+{"answer":"Aurora University","case_id":"qa-01","retrieved_nodes":["Aurora University"],"retrieved_supporting_facts":["doc-alpha#0"]}
+{"answer":"Borealis Republic","case_id":"qa-02","retrieved_nodes":["Borealis Republic","Aster City","Aurora University"],"retrieved_supporting_facts":["doc-alpha#0","doc-alpha#1","doc-alpha#2"]}
+{"answer":"Orion Database","case_id":"qa-03","retrieved_nodes":["Orion Database","Quill Labs"],"retrieved_supporting_facts":["doc-beta#0","doc-beta#1"]}
+{"answer":"2012","case_id":"qa-04","retrieved_nodes":["2012"],"retrieved_supporting_facts":["doc-beta#2"]}
+{"answer":"Helios Comet","case_id":"qa-05","retrieved_nodes":["Helios Comet","Silver Observatory"],"retrieved_supporting_facts":["doc-gamma#0","doc-gamma#1"]}
+{"answer":"Ridge Province","case_id":"qa-06","retrieved_nodes":["Ridge Province"],"retrieved_supporting_facts":["doc-gamma#2"]}
+{"answer":"Ember Novel","case_id":"qa-07","retrieved_nodes":["Ember Novel"],"retrieved_supporting_facts":["doc-delta#0"]}
+{"answer":"Lumen Town","case_id":"qa-08","retrieved_nodes":["Lumen Town","Bluebird Press"],"retrieved_supporting_facts":["doc-delta#0","doc-delta#1"]}

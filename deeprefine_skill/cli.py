@@ -1213,6 +1213,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_sync.set_defaults(func=cmd_history_sync_memory)
 
+    # deeprefine benchmark prepare | evaluate | report
+    from deeprefine_skill.benchmarking.cli import register_benchmark_commands
+
+    register_benchmark_commands(sub)
+
     p_index = sub.add_parser("index", help="Rebuild FAISS cache from graph.json")
     p_index.add_argument("--rebuild", action="store_true", default=True)
     p_index.set_defaults(func=cmd_index)
