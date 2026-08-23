@@ -1,0 +1,22 @@
+{
+  "files": {
+    "baseline_graph.json": "edb8203410356b650b4027f30f2388c2f18f1ad4c6ae7f53d87080ac6f2c1fc6",
+    "baseline_predictions.jsonl": "ec17daaf34783aa04a2f7bff98c2d4e4b536a17cd22c2d6803ab2463374d029d",
+    "candidate_graph.json": "683e80be81fa6dcdc7c6eededcaa528fd023d9f8ca69ef180a776ca6f9a5f3d1",
+    "candidate_predictions.jsonl": "f9a8d4364c28dd50d903de41eec844f690198db869950efadce3c5879e144c2a",
+    "corpus/doc-alpha.txt": "1e2a7d558baf4f27da169a0e53f5439f4f91bf5684aa00e3e75e6d92b7a958fa",
+    "corpus/doc-beta.txt": "e486d3e14f6b6188d4055c13c4a329520f9420543b0e92a75b942c4ad5d63d64",
+    "corpus/doc-delta.txt": "438726bc79e78c00433fe9ea8728a13ed337d610843e0421362baae444cd7f27",
+    "corpus/doc-gamma.txt": "0b74f07bd31be3d9b4f183cbb60cdf66703d30afa2689123634ce25d1014fb8d",
+    "queries.jsonl": "f5f9bb8cdb2dd4f8b945aadac747e471d336e35164f2b8997b28cf53cacbe457",
+    "suite.json": "3071ebe7026790274c8c85216e343a9f1249f03cbb3a91b99f578b65f4019f8b"
+  },
+  "profile": "smoke",
+  "schema_version": 1,
+  "selection_seed": "deeprefine-benchmark-v1",
+  "source": {
+    "dataset": "Self-authored synthetic fixture",
+    "license": "MIT"
+  },
+  "suite_id": "synthetic-smoke-v1"
+}
