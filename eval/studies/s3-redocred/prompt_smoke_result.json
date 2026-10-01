@@ -6,8 +6,8 @@
     "dirty": false
   },
   "deeprefine_skill_revision": {
-    "commit": "beea74a874b8ef3e291d3ba6bb44cb9baa6022e2",
-    "dirty": true
+    "commit": "d8dc727fdbe243a89d5bdd8f3f29f872662d6b91",
+    "dirty": false
   },
   "only_difference_is_context": true,
   "open_contains_sentinel": true,
