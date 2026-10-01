@@ -700,6 +700,7 @@ def cmd_refine(args: argparse.Namespace) -> int:
         query=args.query,
         rebuild_index=args.rebuild_index,
         apply=args.apply,
+        gen_answer=args.gen_answer,
     )
     print("\n--- DeepRefine summary ---")
     print(f"Mode: {result['mode']}")
@@ -1225,6 +1226,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_refine.add_argument("--project-root", default=None)
     p_refine.add_argument("--rebuild-index", action="store_true")
+    p_refine.add_argument(
+        "--gen-answer",
+        action="store_true",
+        help="Generate answers during refinement (disabled by default).",
+    )
     p_refine.add_argument(
         "--apply",
         action="store_true",

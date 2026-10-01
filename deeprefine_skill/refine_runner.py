@@ -107,6 +107,7 @@ def run_refine(
     base_top_k: int = 5,
     max_hops: int = 4,
     apply: bool = False,
+    gen_answer: bool = False,
 ) -> dict[str, Any]:
     if not graph_path.is_file():
         raise FileNotFoundError(f"graphify graph not found: {graph_path}")
@@ -126,7 +127,7 @@ def run_refine(
         max_triple_num=20,
         max_triple_num_by_step=[5, 10, 15, 20],
         history_horizon_size=4,
-        if_gen_answer=False,
+        if_gen_answer=gen_answer,
     )
 
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -237,6 +238,7 @@ def refine_from_history(
     query: str | None = None,
     rebuild_index: bool = False,
     apply: bool = False,
+    gen_answer: bool = False,
 ) -> dict[str, Any]:
     if query:
         entry = append_history(paths["history"], query, source="deeprefine")
@@ -261,4 +263,5 @@ def refine_from_history(
         queries=queries,
         rebuild_index=rebuild_index,
         apply=apply,
+        gen_answer=gen_answer,
     )
