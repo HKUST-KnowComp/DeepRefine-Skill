@@ -79,3 +79,43 @@ def test_target_metrics_keeps_strict_and_endpoint_separate() -> None:
     assert metrics["strict_relation_label"] == 0
     assert metrics["endpoint_pair_added"] == 1
     assert metrics["denominator"] == 1
+
+
+def test_exact_entity_fold_rehomes_edge_without_rewriting_relation() -> None:
+    import networkx as nx
+
+    graph = nx.DiGraph()
+    graph.add_node("baseline-film", id="Film")
+    graph.add_node("phantom-film", id="Film")
+    graph.add_node("new-year", id="1999")
+    graph.add_edge("phantom-film", "new-year", relation="release_year")
+
+    report = s3_pilot.fold_exact_baseline_entities(
+        graph,
+        {"baseline-film": "Film"},
+    )
+
+    assert "phantom-film" not in graph
+    assert graph.has_edge("baseline-film", "new-year")
+    assert graph.edges["baseline-film", "new-year"]["relation"] == "release_year"
+    assert report["edges_remapped"] == 1
+    assert report["folded"]["phantom-film"]["target"] == "baseline-film"
+
+
+def test_exact_entity_fold_keeps_ambiguous_match() -> None:
+    import networkx as nx
+
+    graph = nx.DiGraph()
+    graph.add_node("baseline-a", id="Iran")
+    graph.add_node("baseline-b", id="Iran")
+    graph.add_node("phantom", id="Iran")
+
+    report = s3_pilot.fold_exact_baseline_entities(
+        graph,
+        {"baseline-a": "Iran", "baseline-b": "Iran"},
+    )
+
+    assert "phantom" in graph
+    assert report["residual"] == [
+        {"key": "phantom", "label": "Iran", "reason": "ambiguous"}
+    ]

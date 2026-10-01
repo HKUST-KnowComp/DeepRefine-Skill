@@ -78,3 +78,8 @@ pilot are recorded in `PILOT_PLAN.md`.
 the three frozen targets in open and closed mode, writes per-call usage and
 metadata, stops before requests that exceed the caps, and reports strict
 relation-label and newly-added endpoint-pair metrics separately.
+
+Before Graphify serialization it also folds refinement-minted nodes onto a
+baseline node only when the display label has one exact match.  Ambiguous and
+new entities remain unchanged.  This prevents DeepRefine's hash-key namespace
+from hiding an otherwise observable target pair during evaluation.

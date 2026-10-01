@@ -234,6 +234,74 @@ def _serialize_refinement(
     }
 
 
+def fold_exact_baseline_entities(
+    kg: Any,
+    baseline_labels: Mapping[str, str],
+) -> dict[str, Any]:
+    """Re-home refinement-minted exact-label duplicates onto baseline nodes.
+
+    DeepRefine hashes action entity strings even when an identically labelled
+    graph node already exists.  Stage 3 folds only unique, exact label matches;
+    ambiguous and genuinely new entities remain untouched, and relation words
+    are never rewritten.
+    """
+
+    label_to_ids: dict[str, list[str]] = {}
+    for node_id, label in baseline_labels.items():
+        label_to_ids.setdefault(str(label).strip(), []).append(node_id)
+    fold_map: dict[str, str] = {}
+    residual: list[dict[str, str]] = []
+    for node_id in list(kg.nodes):
+        if node_id in baseline_labels or kg.nodes[node_id].get("type") == "passage":
+            continue
+        label = str(kg.nodes[node_id].get("id") or node_id).strip()
+        candidates = label_to_ids.get(label, [])
+        if len(candidates) == 1:
+            fold_map[node_id] = candidates[0]
+        else:
+            residual.append(
+                {
+                    "key": node_id,
+                    "label": label,
+                    "reason": "ambiguous" if candidates else "unmatched",
+                }
+            )
+
+    remapped = 0
+    duplicates_dropped = 0
+    self_loops_dropped = 0
+    incident = [
+        (source, target, dict(attributes))
+        for source, target, attributes in kg.edges(data=True)
+        if source in fold_map or target in fold_map
+    ]
+    kg.remove_edges_from([(source, target) for source, target, _ in incident])
+    for source, target, attributes in incident:
+        new_source = fold_map.get(source, source)
+        new_target = fold_map.get(target, target)
+        if new_source == new_target:
+            self_loops_dropped += 1
+        elif kg.has_edge(new_source, new_target):
+            duplicates_dropped += 1
+        else:
+            kg.add_edge(new_source, new_target, **attributes)
+            remapped += 1
+    kg.remove_nodes_from(fold_map)
+    return {
+        "folded": {
+            source: {
+                "label": str(kg.nodes[target].get("id") or target),
+                "target": target,
+            }
+            for source, target in fold_map.items()
+        },
+        "residual": residual,
+        "edges_remapped": remapped,
+        "edges_duplicated_dropped": duplicates_dropped,
+        "edges_self_loop_dropped": self_loops_dropped,
+    }
+
+
 def prepare_pilot_inputs(
     *,
     source_root: Path,
@@ -430,6 +498,11 @@ def run_condition(
     finally:
         usage = _write_usage(condition_dir / "api_usage.jsonl", recorder)
 
+    baseline_labels = {
+        node["id"]: str(node.get("label") or node["id"])
+        for node in raw.get("nodes", [])
+    }
+    fold_report = fold_exact_baseline_entities(refiner.kg, baseline_labels)
     data["KG"] = refiner.kg
     candidate = sync_kg_to_graphify(raw, refiner.kg)
     candidate_path = condition_dir / "candidate_graph.json"
@@ -463,6 +536,7 @@ def run_condition(
             "queries": copy.deepcopy(prepared["queries"]),
             "queries_completed": completed,
             "usage": usage,
+            "entity_fold": fold_report,
         }
     )
     write_run_metadata(condition_dir / "metadata.json", metadata)
