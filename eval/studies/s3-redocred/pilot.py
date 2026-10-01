@@ -532,7 +532,11 @@ def main() -> int:
     _load_env_file(args.env_file)
     config = _config_from_env()
     skill_repo = Path(__file__).resolve().parents[3]
-    for path in (args.deeprefine_repo / "AutoSchemaKG", args.deeprefine_repo):
+    for path in (
+        skill_repo,
+        args.deeprefine_repo / "AutoSchemaKG",
+        args.deeprefine_repo,
+    ):
         sys.path.insert(0, str(path.resolve()))
 
     prepared = prepare_pilot_inputs(
