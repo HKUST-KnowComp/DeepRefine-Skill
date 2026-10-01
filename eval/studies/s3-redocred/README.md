@@ -83,3 +83,11 @@ Before Graphify serialization it also folds refinement-minted nodes onto a
 baseline node only when the display label has one exact match.  Ambiguous and
 new entities remain unchanged.  This prevents DeepRefine's hash-key namespace
 from hiding an otherwise observable target pair during evaluation.
+
+## Unattended full run
+
+`batch.py` runs all 50 frozen cases as isolated `pilot.py` subprocesses.  It
+validates every completed case before advancing, skips valid completed cases
+on restart, refuses to overwrite incomplete output, stops on the first failed
+case, and enforces global caps of 4,000 total requests and 1,500 LLM requests.
+Raw per-case output remains ignored under `eval/results/`.
