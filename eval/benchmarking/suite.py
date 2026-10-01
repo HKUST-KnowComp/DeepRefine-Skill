@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from importlib import resources
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -23,10 +22,9 @@ def sha256_file(path: str | Path) -> str:
 
 
 def builtin_suite_path(suite_id: str) -> Path:
-    """Resolve an unpacked built-in suite directory."""
+    """Resolve a built-in suite from the repository's ``eval/suites`` tree."""
 
-    root = resources.files("deeprefine_skill").joinpath("benchmark_suites", suite_id)
-    path = Path(str(root))
+    path = Path(__file__).resolve().parent.parent / "suites" / suite_id
     if not (path / "suite.json").is_file():
         raise ValueError(f"Unknown built-in benchmark suite: {suite_id}")
     return path

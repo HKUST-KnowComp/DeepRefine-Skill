@@ -164,9 +164,6 @@ Run from your KB project root.
 | `deeprefine apply --refresh-wiki --trace-file T --refinement-file F` | Apply actions and regenerate `graphify-out/wiki` from the refined graph; graph + Wiki are committed together |
 | `deeprefine apply --refresh-wiki --allow-low-confidence --trace-file T --refinement-file F` | Refresh the Wiki while explicitly overriding the LOW-confidence guard |
 | `deeprefine loop finish --trace-file T [--refinement-file F]` | Persist results and mark history refined |
-| `deeprefine benchmark prepare ...` | Prepare a deterministic smoke/Re-DocRED/2Wiki mini suite |
-| `deeprefine benchmark evaluate ...` | Compare baseline and candidate graphs without modifying either |
-| `deeprefine benchmark report ...` | Merge result JSON files into a README-ready Markdown table |
 
 ### Evidence-aware review and safe apply
 
@@ -193,8 +190,9 @@ When the knowledge base was created with Graphify Wiki output, use `--refresh-wi
 
 ## Lightweight graph-quality benchmark
 
-`deeprefine benchmark` compares a Graphify baseline with a refined candidate
-without importing DeepRefine's FAISS/model stack. Default scoring is offline,
+The checkout-only evaluator compares a Graphify baseline with a refined
+candidate without importing DeepRefine's FAISS/model stack. It lives under
+`eval/` rather than the installed runtime package. Default scoring is offline,
 deterministic, read-only, and uses only the Python standard library.
 
 It reports two complementary views:
@@ -213,15 +211,15 @@ those integrity checks are not treated as semantic quality scores.
 
 ### Zero-cost smoke run
 
-The package includes a self-authored fixture solely to verify the evaluator:
+The repository includes a self-authored fixture solely to verify the evaluator:
 
 ```bash
-deeprefine benchmark evaluate \
+python -m eval.benchmarking.cli evaluate \
   --suite synthetic-smoke-v1 \
-  --baseline-graph deeprefine_skill/benchmark_suites/synthetic-smoke-v1/baseline_graph.json \
-  --candidate-graph deeprefine_skill/benchmark_suites/synthetic-smoke-v1/candidate_graph.json \
-  --baseline-predictions deeprefine_skill/benchmark_suites/synthetic-smoke-v1/baseline_predictions.jsonl \
-  --candidate-predictions deeprefine_skill/benchmark_suites/synthetic-smoke-v1/candidate_predictions.jsonl \
+  --baseline-graph eval/suites/synthetic-smoke-v1/baseline_graph.json \
+  --candidate-graph eval/suites/synthetic-smoke-v1/candidate_graph.json \
+  --baseline-predictions eval/suites/synthetic-smoke-v1/baseline_predictions.jsonl \
+  --candidate-predictions eval/suites/synthetic-smoke-v1/candidate_predictions.jsonl \
   --output-dir graphify-out/.deeprefine/benchmark/smoke
 ```
 
@@ -243,13 +241,13 @@ are not a DeepRefine performance claim.
 Raw third-party text is not bundled. Supply an official upstream JSON file:
 
 ```bash
-deeprefine benchmark prepare \
+python -m eval.benchmarking.cli prepare \
   --suite redocred-mini-v1 \
   --profile readme \
   --source /path/to/Re-DocRED/dev_revised.json \
   --output-dir prepared/redocred-mini-v1
 
-deeprefine benchmark prepare \
+python -m eval.benchmarking.cli prepare \
   --suite 2wiki-mini-v1 \
   --profile readme \
   --source /path/to/2wikimultihopqa.json \
@@ -264,7 +262,7 @@ corpora retain every selected 2Wiki question's distractor passages.
 After building and refining graphs from the prepared corpus, score the pair:
 
 ```bash
-deeprefine benchmark evaluate \
+python -m eval.benchmarking.cli evaluate \
   --suite prepared/2wiki-mini-v1 \
   --baseline-graph runs/before/graph.json \
   --candidate-graph runs/after/graph.json \
@@ -272,7 +270,7 @@ deeprefine benchmark evaluate \
   --deeprefine-version COMMIT_OR_MODEL \
   --output-dir graphify-out/.deeprefine/benchmark/2wiki
 
-deeprefine benchmark report \
+python -m eval.benchmarking.cli report \
   --result graphify-out/.deeprefine/benchmark/redocred/result.json \
   --result graphify-out/.deeprefine/benchmark/2wiki/result.json \
   --format markdown \

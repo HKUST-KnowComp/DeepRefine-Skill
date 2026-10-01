@@ -64,9 +64,4 @@ deeprefine_skill = [
     "gemini_extension/commands/*.toml",
     "gemini_extension/commands/deeprefine/*.toml",
     "gemini_extension/skills/deeprefine/SKILL.md",
-    "benchmark_suites/*.md",
-    "benchmark_suites/*/*.json",
-    "benchmark_suites/*/*.jsonl",
-    "benchmark_suites/*/*.md",
-    "benchmark_suites/*/corpus/*.txt",
 ]
