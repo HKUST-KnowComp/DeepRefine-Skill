@@ -73,3 +73,8 @@ python eval/studies/s3-redocred/prompt_smoke.py \
 
 The approved scope and request stop limits for the still-unstarted real-model
 pilot are recorded in `PILOT_PLAN.md`.
+
+`pilot.py` implements that bounded run.  It prepares one common graph, runs
+the three frozen targets in open and closed mode, writes per-call usage and
+metadata, stops before requests that exceed the caps, and reports strict
+relation-label and newly-added endpoint-pair metrics separately.
