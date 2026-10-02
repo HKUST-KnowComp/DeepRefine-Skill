@@ -1,0 +1,133 @@
+{
+  "branch": "codex/eval-four-stage-benchmark",
+  "schema_version": 1,
+  "stages": [
+    {
+      "code_revisions": {
+        "deeprefine": {
+          "provenance": "recorded_at_runtime",
+          "revision": "b783b114bb5508c8f223ea1262fc3464fc981f32"
+        },
+        "deeprefine_skill_runtime": {
+          "provenance": "recorded_at_runtime",
+          "revision": "9261ec473a88410b7bbef10ad1c5d42aca9a9bce"
+        },
+        "source_and_gold": {
+          "provenance": "embedded_in_structeval_result",
+          "revision": "ff4a09499b7303395341cd660b3d25f243cddd49"
+        }
+      },
+      "dataset": "DeepRefine-Skill v0.2.0 source tree",
+      "limitations": [
+        "guided completion rather than autonomous discovery",
+        "single execution, not a seed interval"
+      ],
+      "models": {
+        "embedding": "Qwen/Qwen3-Embedding-8B",
+        "llm": "Qwen/Qwen3-32B"
+      },
+      "primary_metric": "strict module-dependency recovery",
+      "result": "eval/reports/s1-code-single-s2026.json",
+      "sample": "5 module gaps + 3 symbol gaps",
+      "seed": 2026,
+      "stage": "s1-code-single",
+      "status": "complete"
+    },
+    {
+      "code_revisions": {
+        "candidate_generation": {
+          "provenance": "not_embedded_in_historical_result",
+          "revision": null
+        },
+        "repository_checkouts": {
+          "provenance": "recovered_from_surviving_local_checkouts",
+          "revisions": {
+            "click": "8b19813",
+            "python-dateutil": "1ae8077",
+            "requests": "6e83187",
+            "urllib3": "9a950b9"
+          }
+        }
+      },
+      "dataset": "four real Python repositories",
+      "limitations": [
+        "16 historical candidate graphs were rescored offline",
+        "historical result files did not embed repository or runtime revisions",
+        "the corrected execution path was validated by a four-query smoke, not a full new model rerun"
+      ],
+      "models": null,
+      "primary_metric": "pooled strict module-dependency recovery",
+      "result": "eval/reports/s2-code-multirepo.json",
+      "sample": "4 repositories; 35 dependency and 142 symbol targets per execution",
+      "seed": [
+        2026,
+        2027,
+        2028,
+        2029
+      ],
+      "stage": "s2-code-multirepo",
+      "status": "complete_offline_rescore"
+    },
+    {
+      "code_revisions": {
+        "deeprefine": {
+          "dirty": false,
+          "provenance": "recorded_for_all_conditions",
+          "revision": "b783b114bb5508c8f223ea1262fc3464fc981f32"
+        },
+        "deeprefine_skill": {
+          "dirty": false,
+          "provenance": "recorded_for_all_conditions",
+          "revision": "89116ff01cdf9781d963cd4002152a40658c2c2c"
+        }
+      },
+      "dataset": "Re-DocRED dev",
+      "dataset_sha256": "051ee1d057204a5d08ef5502beacdadf191245b5eaf0e29ec2c607cf002c016f",
+      "limitations": [
+        "single seed",
+        "free-form relation labels are not constrained to the Re-DocRED vocabulary",
+        "endpoint-pair coverage is diagnostic, not semantic relation recovery"
+      ],
+      "models": {
+        "embedding": "Qwen/Qwen3-Embedding-8B",
+        "llm": "Qwen/Qwen3-32B"
+      },
+      "primary_metric": "strict relation-label recovery",
+      "result": "eval/reports/s3-redocred-s2026.json",
+      "sample": "50 documents x 3 targets x paired open/closed conditions",
+      "seed": 2026,
+      "stage": "s3-redocred",
+      "status": "complete"
+    },
+    {
+      "code_revisions": {
+        "deeprefine": {
+          "provenance": "observed_at_acceptance_not_embedded_per_case",
+          "revision": "b783b114bb5508c8f223ea1262fc3464fc981f32"
+        },
+        "stage4_worktree": {
+          "provenance": "post_run_commit_capturing_evaluated_worktree",
+          "revision": "72122462c44aaea348c63ae8797ed222f2f6a15d"
+        }
+      },
+      "dataset": "2WikiMultihopQA dev",
+      "dataset_sha256": "48b9bdc69654dc580fda5f935a48b88cb89f11887587310af60d406c8d0111a6",
+      "limitations": [
+        "single fixed engineering execution without a confidence interval",
+        "per-case artifacts did not embed Git revisions",
+        "historical first-hop versus expanded-hop result remains invalid for graph-refinement attribution"
+      ],
+      "models": {
+        "embedding": "Qwen/Qwen3-Embedding-8B",
+        "llm": "Qwen/Qwen3-32B"
+      },
+      "primary_metric": "paired pre/post Exact Match and token F1",
+      "result": "eval/reports/s4-2wiki-s2026.json",
+      "sample": "64 questions; 16 per question type",
+      "seed": 2026,
+      "stage": "s4-2wiki",
+      "status": "complete"
+    }
+  ],
+  "updated": "2026-10-02"
+}

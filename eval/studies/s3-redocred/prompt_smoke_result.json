@@ -1,0 +1,17 @@
+{
+  "closed_contains_sentinel": false,
+  "closed_prompt_sha256": "8a635c8fe8d903175edf489d321787e88c14ab8f998999d01ca6a31dae5e12ac",
+  "deeprefine_revision": {
+    "commit": "b783b114bb5508c8f223ea1262fc3464fc981f32",
+    "dirty": false
+  },
+  "deeprefine_skill_revision": {
+    "commit": "d8dc727fdbe243a89d5bdd8f3f29f872662d6b91",
+    "dirty": false
+  },
+  "only_difference_is_context": true,
+  "open_contains_sentinel": true,
+  "open_prompt_sha256": "2dcc0a126e3f9b88c858922d6c16ad88c83de8371594ba29f462d61310a0a720",
+  "prompt_smoke_script_sha256": "22cecfa57981785da1b5b230c141120f5c857ef2269d45c0acd6a8386baa0b79",
+  "sentinel": "STAGE3_OPEN_BOOK_SENTINEL_20261001"
+}

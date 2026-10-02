@@ -1,0 +1,48 @@
+{
+  "api_usage": {
+    "calls": 103,
+    "completion_tokens": 1452,
+    "embed_calls": 59,
+    "errors": 0,
+    "llm_calls": 44,
+    "prompt_tokens": 44045
+  },
+  "code_revisions": {
+    "deeprefine": "b783b114bb5508c8f223ea1262fc3464fc981f32",
+    "deeprefine_skill_runtime": "9261ec473a88410b7bbef10ad1c5d42aca9a9bce",
+    "source_and_gold": "ff4a09499b7303395341cd660b3d25f243cddd49"
+  },
+  "graph_preservation": {
+    "baseline_edges": 890,
+    "baseline_nodes": 543,
+    "final_edges": 899,
+    "final_nodes": 547,
+    "lost_baseline_edge_instances": 0,
+    "lost_baseline_node_ids": 0,
+    "new_edges": 9,
+    "new_nodes": 4
+  },
+  "interpretation": "Single guided completion run; not autonomous discovery and not a seed interval.",
+  "metrics": {
+    "module_dependencies": {
+      "recovered": 5,
+      "still_missing": 0,
+      "target_denominator": 5
+    },
+    "new_unverified_import_claims": 0,
+    "symbol_imports": {
+      "recovered": 0,
+      "still_missing": 3,
+      "target_denominator": 3
+    }
+  },
+  "models": {
+    "embedding": "Qwen/Qwen3-Embedding-8B",
+    "llm": "Qwen/Qwen3-32B"
+  },
+  "requested_seed": 2026,
+  "retrieval_scope": "all",
+  "schema_version": 1,
+  "status": "corrected_rerun_complete",
+  "study": "s1-code-single"
+}

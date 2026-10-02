@@ -1,0 +1,70 @@
+{
+  "case_count": 50,
+  "code_revisions": {
+    "deeprefine": [
+      {
+        "commit": "b783b114bb5508c8f223ea1262fc3464fc981f32",
+        "dirty": false
+      }
+    ],
+    "deeprefine_skill": [
+      {
+        "commit": "89116ff01cdf9781d963cd4002152a40658c2c2c",
+        "dirty": false
+      }
+    ]
+  },
+  "conditions": {
+    "closed": {
+      "action_queries": 62,
+      "calls": 1152,
+      "cases": 50,
+      "completion_tokens": 11738,
+      "embed_calls": 707,
+      "endpoint_pair": 41,
+      "errors": 0,
+      "first_step_yes": 74,
+      "folded_entities": 76,
+      "llm_calls": 445,
+      "prompt_tokens": 240854,
+      "queries": 150,
+      "strict_relation_label": 0,
+      "truncated_contexts": 0
+    },
+    "open": {
+      "action_queries": 61,
+      "calls": 1215,
+      "cases": 50,
+      "completion_tokens": 13123,
+      "embed_calls": 770,
+      "endpoint_pair": 38,
+      "errors": 0,
+      "first_step_yes": 74,
+      "folded_entities": 97,
+      "llm_calls": 445,
+      "prompt_tokens": 259352,
+      "queries": 150,
+      "strict_relation_label": 0,
+      "truncated_contexts": 0
+    }
+  },
+  "dataset": "Re-DocRED",
+  "interpretation": {
+    "boundary": "Single-seed endpoint coverage does not establish an open-book effect; free-form relation labels are not strict semantic recovery.",
+    "primary": "strict relation-label recovery",
+    "secondary": "relation-agnostic endpoint-pair coverage"
+  },
+  "paired_endpoint_outcomes": {
+    "both": 32,
+    "closed_only": 9,
+    "neither": 103,
+    "open_only": 6
+  },
+  "paired_exact_two_sided_p": 0.60723876953125,
+  "schema_version": 1,
+  "seed": 2026,
+  "status": "valid",
+  "study": "s3-redocred",
+  "target_denominator": 150,
+  "validation_issues": []
+}

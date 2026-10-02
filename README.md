@@ -188,6 +188,111 @@ When the knowledge base was created with Graphify Wiki output, use `--refresh-wi
 
 ---
 
+## Lightweight graph-quality benchmark
+
+The checkout-only evaluator compares a Graphify baseline with a refined
+candidate without importing DeepRefine's FAISS/model stack. It lives under
+`eval/` rather than the installed runtime package. Default scoring is offline,
+deterministic, read-only, and uses only the Python standard library.
+
+It reports two complementary views:
+
+- **Intrinsic quality:** entity and strict `(head, relation, tail)`
+  precision/recall/F1 against an annotated graph, plus lightweight
+  GraphJudge-style G-BLEU and G-ROUGE.
+- **Downstream quality:** query-relevant evidence-edge recall, complete
+  multi-hop path rate, answer reachability, and before/after repair-regression
+  transitions. Optional prediction JSONL adds Hit@K, MRR, supporting-fact
+  Recall@K, answer EM, and token F1.
+
+The Wiki is a derived view of `graph.json`. Optional `--baseline-wiki` and
+`--candidate-wiki` arguments check `index.md`, local links, and orphan pages;
+those integrity checks are not treated as semantic quality scores.
+
+### Zero-cost smoke run
+
+The repository includes a self-authored fixture solely to verify the evaluator:
+
+```bash
+python -m eval.benchmarking.cli evaluate \
+  --suite synthetic-smoke-v1 \
+  --baseline-graph eval/suites/synthetic-smoke-v1/baseline_graph.json \
+  --candidate-graph eval/suites/synthetic-smoke-v1/candidate_graph.json \
+  --baseline-predictions eval/suites/synthetic-smoke-v1/baseline_predictions.jsonl \
+  --candidate-predictions eval/suites/synthetic-smoke-v1/candidate_predictions.jsonl \
+  --output-dir graphify-out/.deeprefine/benchmark/smoke
+```
+
+Expected self-check values:
+
+| Suite | Metric | Synthetic Before | Synthetic After | Δ |
+|---|---|---:|---:|---:|
+| synthetic-smoke-v1 | Entity F1 | 97.73% | 100.00% | +2.27 pp |
+| synthetic-smoke-v1 | Strict Triple F1 | 82.86% | 100.00% | +17.14 pp |
+| synthetic-smoke-v1 | Evidence Edge Recall | 47.92% | 100.00% | +52.08 pp |
+| synthetic-smoke-v1 | Complete Path Rate | 25.00% | 100.00% | +75.00 pp |
+| synthetic-smoke-v1 | Answer F1 | 25.00% | 100.00% | +75.00 pp |
+
+These values describe an intentionally damaged and repaired test graph. They
+are not a DeepRefine performance claim.
+
+### Prepare a real mini suite
+
+Raw third-party text is not bundled. Supply an official upstream JSON file:
+
+```bash
+python -m eval.benchmarking.cli prepare \
+  --suite redocred-mini-v1 \
+  --profile readme \
+  --source /path/to/Re-DocRED/dev_revised.json \
+  --output-dir prepared/redocred-mini-v1
+
+python -m eval.benchmarking.cli prepare \
+  --suite 2wiki-mini-v1 \
+  --profile readme \
+  --source /path/to/2wikimultihopqa.json \
+  --output-dir prepared/2wiki-mini-v1
+```
+
+`quick` selects 10 Re-DocRED documents or 16 balanced 2Wiki questions.
+`readme` selects 50 documents or 64 questions. Selection is deterministic, and
+`suite.lock.json` records source and generated-file SHA-256 hashes. Prepared
+corpora retain every selected 2Wiki question's distractor passages.
+
+After building and refining graphs from the prepared corpus, score the pair:
+
+```bash
+python -m eval.benchmarking.cli evaluate \
+  --suite prepared/2wiki-mini-v1 \
+  --baseline-graph runs/before/graph.json \
+  --candidate-graph runs/after/graph.json \
+  --graphify-version 0.9.12 \
+  --deeprefine-version COMMIT_OR_MODEL \
+  --output-dir graphify-out/.deeprefine/benchmark/2wiki
+
+python -m eval.benchmarking.cli report \
+  --result graphify-out/.deeprefine/benchmark/redocred/result.json \
+  --result graphify-out/.deeprefine/benchmark/2wiki/result.json \
+  --format markdown \
+  --output graphify-out/.deeprefine/benchmark/README-results.md
+```
+
+For optional G-BERTScore, install
+`pip install "deeprefine-cli[benchmark-semantic]"` and pass
+`--semantic-model roberta-large`. It is intentionally excluded from default
+CI because it downloads a large model and PyTorch runtime.
+
+2Wiki `evidences` are answer paths, not an exhaustive graph. Accordingly,
+2Wiki reports evidence recall/path coverage but never full-graph edge
+precision. This micro-benchmark supports regression checks and README
+demonstrations; it does not replace full GraphRAG evaluation. See
+[benchmark data attribution](docs/benchmark-data.md) for sources and licensing.
+Real Re-DocRED/2Wiki scores should only be added here together with their
+committed `result.json`, exact commands, versions, hashes, token counts, and
+cost.
+
+---
+
 ## Codex Integration
 
 <details>
@@ -565,7 +670,7 @@ deeprefine refine          # dry-run by default
 
 ```bash
 deeprefine --help
-# Expect: cursor, copilot, codex, claude, opencode, gemini, history, index, refine, review, apply, loop
+# Expect: cursor, copilot, codex, claude, opencode, gemini, benchmark, history, index, refine, review, apply, loop
 ```
 </details>
 

@@ -29,9 +29,10 @@ docs/tmp/
 graphify-out/
 
 # Python virtualenv
-.venv/
 venv/
 
-# Evaluation data / runtime output (scripts are tracked)
-eval/data/
-eval/results/
+# Generated benchmark inputs/results; keep the tracked README files only.
+eval/data/*
+!eval/data/README.md
+eval/results/*
+!eval/results/README.md

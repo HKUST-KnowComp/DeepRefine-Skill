@@ -14,3 +14,4 @@ recursive-include commands *.toml
 recursive-include skills *.md
 recursive-include docs *.md
 recursive-include deeprefine_skill/gemini_extension *
+recursive-include deeprefine_skill/benchmark_suites *.json *.jsonl *.md *.txt
