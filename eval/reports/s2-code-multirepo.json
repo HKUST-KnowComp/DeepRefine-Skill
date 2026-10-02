@@ -1,0 +1,49 @@
+{
+  "executions": [
+    {
+      "dependency_recovered": 19,
+      "dependency_total": 35,
+      "new_unverified": 38,
+      "repositories": 4,
+      "seed": 2026,
+      "symbol_recovered": 0,
+      "symbol_total": 142
+    },
+    {
+      "dependency_recovered": 21,
+      "dependency_total": 35,
+      "new_unverified": 55,
+      "repositories": 4,
+      "seed": 2027,
+      "symbol_recovered": 0,
+      "symbol_total": 142
+    },
+    {
+      "dependency_recovered": 16,
+      "dependency_total": 35,
+      "new_unverified": 52,
+      "repositories": 4,
+      "seed": 2028,
+      "symbol_recovered": 0,
+      "symbol_total": 142
+    },
+    {
+      "dependency_recovered": 26,
+      "dependency_total": 35,
+      "new_unverified": 50,
+      "repositories": 4,
+      "seed": 2029,
+      "symbol_recovered": 0,
+      "symbol_total": 142
+    }
+  ],
+  "interpretation": "Candidate graphs are historical generation artifacts rescored with the corrected strict matcher; this is not a new model rerun.",
+  "metric": {
+    "counter_metric": "new unverified import claims",
+    "primary": "pooled strict module-dependency recovery",
+    "secondary": "strict target-module symbol-import recovery"
+  },
+  "schema_version": 1,
+  "status": "audited_offline_rescore",
+  "study": "s2-code-multirepo"
+}

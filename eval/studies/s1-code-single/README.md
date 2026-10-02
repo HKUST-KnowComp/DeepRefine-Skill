@@ -26,3 +26,14 @@ Strict module-dependency recovery: recovered target edges / missing target edges
 
 The current corrected rerun is a single guided run, not an autonomous discovery
 benchmark or a statistical seed interval.
+
+## Corrected seed-2026 result
+
+- module dependencies: 5/5 recovered;
+- symbol imports: 0/3 recovered;
+- baseline node IDs and edge instances lost: 0;
+- API errors: 0 across 103 detail calls.
+
+The reviewed compact record is
+`eval/reports/s1-code-single-s2026.json`; raw graphs and model logs remain
+untracked.

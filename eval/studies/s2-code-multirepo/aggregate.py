@@ -95,14 +95,37 @@ def render_markdown(rows: list[dict[str, int]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_json(rows: list[dict[str, int]]) -> str:
+    payload = {
+        "schema_version": 1,
+        "study": "s2-code-multirepo",
+        "status": "audited_offline_rescore",
+        "metric": {
+            "primary": "pooled strict module-dependency recovery",
+            "secondary": "strict target-module symbol-import recovery",
+            "counter_metric": "new unverified import claims",
+        },
+        "executions": rows,
+        "interpretation": (
+            "Candidate graphs are historical generation artifacts rescored with the "
+            "corrected strict matcher; this is not a new model rerun."
+        ),
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--json-output", type=Path)
     args = parser.parse_args()
     rows = aggregate(args.input_root)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(render_markdown(rows), encoding="utf-8")
+    if args.json_output is not None:
+        args.json_output.parent.mkdir(parents=True, exist_ok=True)
+        args.json_output.write_text(render_json(rows), encoding="utf-8")
     return 0
 
 

@@ -88,6 +88,10 @@ def test_aggregate_pools_counts_by_seed(tmp_path: Path) -> None:
         "new_unverified": 2,
     }
     assert "3/5 (60.0%)" in s2_aggregate.render_markdown(rows)
+    rendered = json.loads(s2_aggregate.render_json(rows))
+    assert rendered["study"] == "s2-code-multirepo"
+    assert rendered["executions"][0]["dependency_recovered"] == 3
+    assert "not a new model rerun" in rendered["interpretation"]
 
 
 def test_aggregate_rejects_denominator_drift(tmp_path: Path) -> None:
