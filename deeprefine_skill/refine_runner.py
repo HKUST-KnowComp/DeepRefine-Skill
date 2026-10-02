@@ -18,6 +18,7 @@ from .adapter_graphify import (
     sync_kg_to_graphify,
 )
 from .action_review import write_review_files
+from .batch_isolation import run_query_isolated
 from .history import append_history, mark_refined, query_id
 from .paths import checkpoints_metadata_path, create_checkpoint
 
@@ -134,6 +135,7 @@ def run_refine(
     refined_ids: set[str] = set()
     summary_rows: list[dict[str, Any]] = []
     completed = 0
+    failed = 0
     meta_path = checkpoints_metadata_path(graph_path.parent.parent)
 
     def _persist() -> None:
@@ -166,7 +168,29 @@ def run_refine(
                 query = sample["query"]
                 qid = query_id(query, sample.get("id"))
                 print(f"\n=== [{qid}] {query}")
-                final_answer, _, refinement_result = deeprefine.refine(query=query)
+                result, error = run_query_isolated(deeprefine, query)
+                if error is not None:
+                    failed += 1
+                    data["KG"] = deeprefine.kg
+                    record = refinement_to_jsonable(sample, None, None)
+                    record["error"] = error
+                    log_f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    log_f.flush()
+                    summary_rows.append(
+                        {
+                            "id": qid,
+                            "query": query,
+                            "steps": 0,
+                            "action_count": 0,
+                            "status": "failed",
+                            "error": error,
+                        }
+                    )
+                    print(f"  query failed: {error}")
+                    continue
+
+                assert result is not None
+                final_answer, _, refinement_result = result
                 record = refinement_to_jsonable(sample, final_answer, refinement_result)
                 log_f.write(json.dumps(record, ensure_ascii=False) + "\n")
                 log_f.flush()
@@ -182,6 +206,7 @@ def run_refine(
                         "query": query,
                         "steps": n_steps,
                         "action_count": rr.get("refinement_action_count", 0),
+                        "status": "ok",
                     }
                 )
                 if apply:
@@ -225,6 +250,8 @@ def run_refine(
         "nodes": deeprefine.kg.number_of_nodes(),
         "edges": deeprefine.kg.number_of_edges(),
         "queries_processed": len(queries),
+        "queries_succeeded": completed,
+        "queries_failed": failed,
         "mode": "apply" if apply else "dry-run",
         "summary": summary_rows,
     }
