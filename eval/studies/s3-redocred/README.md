@@ -91,3 +91,18 @@ validates every completed case before advancing, skips valid completed cases
 on restart, refuses to overwrite incomplete output, stops on the first failed
 case, and enforces global caps of 4,000 total requests and 1,500 LLM requests.
 Raw per-case output remains ignored under `eval/results/`.
+
+`aggregate.py` validates a completed batch and mechanically produces the
+compact report artifact.  For the corrected seed-2026 run:
+
+```bash
+python eval/studies/s3-redocred/aggregate.py \
+  eval/results/s3-redocred-full-s2026-20261002/cases \
+  --output eval/reports/s3-redocred-s2026.json
+```
+
+The corrected full run completed 50/50 documents and 300/300 paired queries
+with zero API errors.  Strict relation-label recovery was 0/150 for both
+conditions.  Endpoint-pair coverage was 38/150 open and 41/150 closed; the
+paired exact test is diagnostic only and does not establish an open-book
+effect from a single seed.
