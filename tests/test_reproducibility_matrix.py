@@ -30,5 +30,5 @@ def test_completed_stage_results_are_tracked_and_pending_stage_is_explicit() -> 
         assert result is not None
         assert (ROOT / result).is_file()
 
-    assert by_stage["s4-2wiki"]["status"] == "running"
-    assert by_stage["s4-2wiki"]["result"] is None
+    assert by_stage["s4-2wiki"]["status"] == "complete"
+    assert (ROOT / by_stage["s4-2wiki"]["result"]).is_file()

@@ -100,20 +100,33 @@
       "status": "complete"
     },
     {
-      "code_revisions": null,
+      "code_revisions": {
+        "deeprefine": {
+          "provenance": "observed_at_acceptance_not_embedded_per_case",
+          "revision": "b783b114bb5508c8f223ea1262fc3464fc981f32"
+        },
+        "stage4_worktree": {
+          "provenance": "post_run_commit_capturing_evaluated_worktree",
+          "revision": "72122462c44aaea348c63ae8797ed222f2f6a15d"
+        }
+      },
       "dataset": "2WikiMultihopQA dev",
       "dataset_sha256": "48b9bdc69654dc580fda5f935a48b88cb89f11887587310af60d406c8d0111a6",
       "limitations": [
-        "corrected pre/post reader execution is still running",
-        "historical first-hop versus expanded-hop result is invalid for graph-refinement attribution"
+        "single fixed engineering execution without a confidence interval",
+        "per-case artifacts did not embed Git revisions",
+        "historical first-hop versus expanded-hop result remains invalid for graph-refinement attribution"
       ],
-      "models": null,
+      "models": {
+        "embedding": "Qwen/Qwen3-Embedding-8B",
+        "llm": "Qwen/Qwen3-32B"
+      },
       "primary_metric": "paired pre/post Exact Match and token F1",
-      "result": null,
+      "result": "eval/reports/s4-2wiki-s2026.json",
       "sample": "64 questions; 16 per question type",
-      "seed": null,
+      "seed": 2026,
       "stage": "s4-2wiki",
-      "status": "running"
+      "status": "complete"
     }
   ],
   "updated": "2026-10-02"
