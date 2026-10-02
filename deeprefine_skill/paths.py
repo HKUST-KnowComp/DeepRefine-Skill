@@ -95,6 +95,46 @@ def checkpoints_metadata_path(project_root: Path) -> Path:
     return project_root / "graphify-out" / ".deeprefine" / "checkpoints.json"
 
 
+def rollback_derivatives(project_root: Path) -> tuple[list[Path], list[Path]]:
+    """Return proposal artifacts and index bundles invalidated by rollback.
+
+    Proposal/review files describe the state that was current before the
+    rollback. Index bundles are derived from ``graph.json`` and are considered
+    fresh using only mtimes; because rollback restores with ``copy2``, a newer
+    bundle can otherwise be reused with an older restored graph.
+    """
+    deep = project_root / "graphify-out" / ".deeprefine"
+    proposal_patterns = (
+        "proposed_refinement_actions_*.txt",
+        "proposed_refinement_review.md",
+        "proposed_refinement_review_*.md",
+        "proposed_refinement_review_*.json",
+    )
+    proposals = sorted(
+        {
+            path
+            for pattern in proposal_patterns
+            for path in deep.glob(pattern)
+            if path.is_file() or path.is_symlink()
+        }
+    )
+    cache = deep / "cache"
+    bundles = sorted(
+        path
+        for path in cache.glob("deeprefine_data*.pkl")
+        if path.is_file() or path.is_symlink()
+    )
+    return proposals, bundles
+
+
+def clear_rollback_derivatives(project_root: Path) -> tuple[int, int]:
+    """Remove stale proposal files and index bundles after a successful restore."""
+    proposals, bundles = rollback_derivatives(project_root)
+    for path in (*proposals, *bundles):
+        path.unlink(missing_ok=True)
+    return len(proposals), len(bundles)
+
+
 def load_checkpoint_metadata(path: Path) -> list[dict]:
     """Load checkpoint timeline metadata. Returns empty list if file doesn't exist."""
     if not path.is_file():

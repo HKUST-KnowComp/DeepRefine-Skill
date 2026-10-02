@@ -723,6 +723,20 @@ def cmd_refine(args: argparse.Namespace) -> int:
     return 0
 
 
+def _clear_restored_state_derivatives(project: Path) -> None:
+    """Invalidate artifacts that describe or cache the state before rollback."""
+    from deeprefine_skill.paths import clear_rollback_derivatives
+
+    proposals, bundles = clear_rollback_derivatives(project)
+    if proposals:
+        print(f"Cleared {proposals} stale proposal/review file(s).")
+    if bundles:
+        print(
+            f"Cleared {bundles} stale index bundle(s); "
+            "the next refine rebuilds it from the restored graph.json."
+        )
+
+
 def cmd_rollback(args: argparse.Namespace) -> int:
     """Inspect / restore the checkpoint timeline of graph.json.
 
@@ -734,6 +748,8 @@ def cmd_rollback(args: argparse.Namespace) -> int:
     deletes them, so every state stays comparable. ``--query <qid>`` undoes
     the LAST refinement of one query precisely (per-run pre-state backup or
     previous checkpoint) and resets that query plus all later ones.
+    A successful restore also clears proposal/review files and derived index
+    bundles so the visible and cached state cannot remain ahead of graph.json.
     """
     project = find_project_root(
         Path(args.project_root) if args.project_root else None
@@ -813,6 +829,7 @@ def cmd_rollback(args: argparse.Namespace) -> int:
                 f"Reset {unmarked} query mark(s) to pending (this query and "
                 "every later one)."
             )
+        _clear_restored_state_derivatives(project)
         return 0
 
     if args.list_checkpoints:
@@ -914,6 +931,7 @@ def cmd_rollback(args: argparse.Namespace) -> int:
             "No later query marks were pending-reset "
             "(nothing refined after this checkpoint)."
         )
+    _clear_restored_state_derivatives(project)
     return 0
 
 
