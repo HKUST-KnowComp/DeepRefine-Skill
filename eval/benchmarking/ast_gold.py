@@ -36,10 +36,10 @@ from typing import Mapping, Sequence
 # ``src/__init__.py`` (the container itself a package) is left unstripped.
 CONTAINER_TOP_DIRS: tuple[str, ...] = ("src", "lib")
 
-# Route-A pre-registered scope rule (docs/tmp/route-a-selection.md §5):
-# developer surfaces excluded from BOTH gold extraction and the graphify
-# corpus, so the exam and the corpus always see the same tree.  Opt-in per
-# call — the default keeps v0.2.0 gold byte-identical (13/14/55).
+# Optional production-source scope rule: developer-only surfaces are excluded
+# from BOTH gold extraction and the graph corpus, so the exam and corpus always
+# see the same tree. Opt in per call; the default keeps the v0.2.0 fixture gold
+# byte-identical (13 modules / 14 dependencies / 55 symbol imports).
 ROUTE_A_EXCLUDED_TOP_DIRS: tuple[str, ...] = (
     "tests", "test", "docs", "doc", "examples", "example",
     "benchmarks", "benchmark", "tools", "scripts",

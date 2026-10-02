@@ -10,3 +10,6 @@ Compact machine-readable records:
 - `s2-code-multirepo.json`: four historical executions, strictly rescored;
 - `s3-redocred-s2026.json`: corrected paired open/closed execution;
 - Stage 4 will be added only after the corrected pre/post reader run finishes.
+
+`reproducibility-matrix.md` is the compact human index across all four stages;
+its JSON companion makes missing revisions and pending results machine-checkable.
